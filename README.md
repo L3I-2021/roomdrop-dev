@@ -1,3 +1,3 @@
 # roomdrop-dev
-Test Daniel
-Test Sabri
+
+- `client`: Fichiers relatifs à l'interface utilsateur

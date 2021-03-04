@@ -23,19 +23,19 @@ def v0_get_all_meetings():
 def v0_new_meeting():
     """ Create a new meeting """
 
-    # Get author from URL
-    author = request.args.get('author', type=str, default='')
+    # Get host from URL
+    host = request.args.get('host', type=str, default='')
 
-    # If author not provided
-    if not author:
+    # If host not provided
+    if not host:
         return jsonify(
             error='Bad request',
             message='Missing parameters',
-            details={'author': 'required'}
+            details={'host': 'required'}
         )
 
     # Create the meeting
-    new_meeting = create_meeting(author)
+    new_meeting = create_meeting(host)
 
     # Return meeting information
     return jsonify(
@@ -75,6 +75,42 @@ def v0_join_meeting():
 
     return jsonify(
         message='Meeting joined successfully'
+    )
+
+
+@app.route('/v0/meetings/<string:meeting_id>')
+def v0_get_meeting(meeting_id):
+    secret_key = request.args.get('secret_key', type=str, default='')
+
+    # If missing parameters
+    if not secret_key:
+        return jsonify(
+            error='Bad request',
+            message='Missing parameters',
+            details={'secret_key': 'required'}
+        )
+
+    # Get corresponding meeting
+    meeting = get_meeting_by_id(meeting_id)
+
+    # If meeting not found
+    if not meeting:
+        return jsonify(
+            error='Not found',
+            message='Meeting not found'
+        )
+
+    # If wrong secret key
+    if secret_key != meeting['secret_key']:
+        return jsonify(
+            error='Unauthorized',
+            message='Wrong secret key'
+        )
+
+    # Return meeting's informations
+    return jsonify(
+        meeting=meeting,
+        message="Meeting %s informations" % meeting['id']
     )
 
 
@@ -150,3 +186,4 @@ def v0_end_meeting(meeting_id):
             error='Unauthorized',
             message='Wrong secret key'
         )
+

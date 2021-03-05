@@ -68,3 +68,6 @@ def delete_guest_from_meeting(meeting, guest):
     db.update({
         'guests': remaining_guests
     }, Meeting.id == meeting['id'])
+
+
+#allo

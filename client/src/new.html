@@ -1,0 +1,32 @@
+<body>
+  <h1>New meeting</h1>
+
+  <form id="newMeetingForm" name="newMeetingForm" action="host.html">
+    <div>
+      <label for="host_fullname">Fullname</label>
+      <input
+        id="host_fullname"
+        name="host_fullname"
+        type="text"
+        placeholder="ex. John Doe"
+        required
+      />
+    </div>
+    <div>
+      <label for="title">Meeting title</label>
+      <input
+        id="title"
+        name="title"
+        type="text"
+        placeholder="ex. TP3"
+        required
+      />
+    </div>
+
+    <div>
+      <button>Start meeting</button>
+    </div>
+  </form>
+
+  <script src="./scripts/new.js"></script>
+</body>

@@ -1,4 +1,4 @@
-const { ipcRenderer } = require("electron");
+const { ipcRenderer, shell } = require("electron");
 const fs = require("fs");
 
 // Get meeting credentials
@@ -44,12 +44,14 @@ const title = document.querySelector("#title");
 const host_fullname = document.querySelector("#host_fullname");
 const uid = document.querySelector("#uid");
 const password = document.querySelector("#password");
+const mountpoint = document.querySelector("#mountpoint");
 
 // Update informations
 title.innerHTML = meeting.title;
 host_fullname.innerHTML = meeting.host_fullname;
 uid.innerHTML = meeting.uid;
 password.innerHTML = meeting.password;
+mountpoint.innerHTML = meeting.mountpoint;
 
 // Guest list related stuff
 const guestCount = document.querySelector("#guestCount");
@@ -79,7 +81,13 @@ function updateGuestList(guests) {
 }
 
 // Action buttons
+const openBtn = document.querySelector("#open");
 const endBtn = document.querySelector("#end");
+
+openBtn.onclick = function () {
+  // Open file explorer on the meeting mountpoint
+  shell.openPath(meeting.mountpoint);
+};
 
 endBtn.onclick = function () {
   // Close the window so that it shows a confirmation message dialog

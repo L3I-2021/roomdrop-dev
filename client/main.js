@@ -1,10 +1,10 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 
 // Set environment
-process.env.ENV = "production"; // set to "development"
+process.env.ENV = "development"; // set to "development"
 
 // Enable live reload for all the files inside your project directory
-if (!process.env.ENV === "production") {
+if (!(process.env.ENV === "production")) {
   require("electron-reload")(`${__dirname}/src`);
 }
 
@@ -63,6 +63,17 @@ function createWindow() {
   // close the window once the meeting has ended
   ipcMain.on("window:close", function (event, args) {
     win.destroy();
+  });
+
+  // show a directory selector
+  ipcMain.on("select:directory", function (event, args) {
+    dialog
+      .showOpenDialog({
+        properties: ["openDirectory"],
+      })
+      .then(function (result) {
+        event.returnValue = result;
+      });
   });
 }
 

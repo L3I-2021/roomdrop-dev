@@ -58,6 +58,21 @@ socket.on("new join", function (data) {
   updateGuestList(data.guests);
 });
 
+// On new join
+socket.on("new join", function (data) {
+  const { guest_fullname } = data;
+
+  // Create a new directory named after the new guest
+  const guestDirPath = meeting.fuseMountpoint + "/" + guest_fullname;
+
+  if (!fs.existsSync(guestDirPath)) {
+    fs.mkdirSync(guestDirPath);
+  }
+});
+
+// On meeting end
+socket.on("end", function (data) {});
+
 // Information elements
 const title = document.querySelector("#title");
 const host_fullname = document.querySelector("#host_fullname");
@@ -132,6 +147,9 @@ function onCloseIntent(event, args) {
         guest_fullname: guest.fullname,
         meeting_uid: meeting.uid,
       });
+
+      // Delete fuse directory (TEMPORARY)
+      fs.rmSync(meeting.fuseMountpoint, { recursive: true, force: true });
 
       // Notify main process to close the window
       ipcRenderer.send("window:close");

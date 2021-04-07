@@ -1,7 +1,7 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 
 // Set environment
-process.env.ENV = "development"; // set to "development"
+process.env.ENV = "production"; // set to "development"
 
 // Enable live reload for all the files inside your project directory
 if (!(process.env.ENV === "production")) {

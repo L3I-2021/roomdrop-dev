@@ -62,6 +62,7 @@ form.onsubmit = function (e) {
       else {
         const credPath = "/tmp/guest.credentials.json";
         const { uid, title, host_fullname, host_uid, password } = res.meeting;
+        const fuseMountpoint = "/tmp/" + uid + "." + password;
         const credentials = {
           guest: res.guest,
           meeting: {
@@ -71,12 +72,16 @@ form.onsubmit = function (e) {
             host_uid,
             password,
             mountpoint: mountpoint.value,
+            fuseMountpoint,
           },
         };
         const writeOpts = { encoding: "utf-8" };
 
         // write credentials to file
         fs.writeFileSync(credPath, JSON.stringify(credentials), writeOpts);
+
+        // Make fuse directory mountpoint
+        fs.mkdirSync(fuseMountpoint);
 
         // submit the form and go to next page
         form.submit();

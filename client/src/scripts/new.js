@@ -40,6 +40,11 @@ form.onsubmit = function (e) {
   // Prevent form from submiting
   e.preventDefault();
 
+  if (mountpoint.value === "") {
+    alert("A mountpoint is required");
+    return;
+  }
+
   const reqBody = {
     fullname: fullname.value,
     title: title.value,

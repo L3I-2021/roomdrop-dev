@@ -36,6 +36,11 @@ form.onsubmit = function (e) {
   // Prevent form from submiting
   e.preventDefault();
 
+  if (mountpoint.value === "") {
+    alert("A mountpoint is required");
+    return;
+  }
+
   // Build request url
   const API_URL = new URL(
     process.env.ENV === "production"

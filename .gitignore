@@ -2,9 +2,10 @@
 client/node_modules
 
 # Server
-server/__pycache__
 server/uploads
 
 # FUSE - Python-fuse fork
-fuse/roomdrop/__pycache__
 fuse/build
+
+# Python cache related stuff
+*.pyc

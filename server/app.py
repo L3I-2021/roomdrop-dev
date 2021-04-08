@@ -411,13 +411,6 @@ def upload_file(uid):
     db.session.add(file)
     db.session.commit()
 
-    # Emit 'new file' event
-    on_new_file({
-        'author_uid': file.author_uid,
-        'filename': file.filename,
-        'meeting_uid': meeting.uid
-    })
-
     return jsonify(message=f'File {reqFile.filename} uploaded successfully',
                    file=file.as_json())
 

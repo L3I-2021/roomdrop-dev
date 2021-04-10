@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 const { ipcRenderer } = require("electron");
 
 // Form elements
@@ -78,7 +79,8 @@ form.onsubmit = function (e) {
           secret_key,
           password,
         } = res.meeting;
-        const fuseMountpoint = "/tmp/" + uid;
+        // FUSE mountpoint = ~ / Roomdrop / MEETING_UID . MEETING_PASSWORD
+        const fuseMountpoint = path.join(process.env.HOME, "Roomdrop", uid);
         const credentials = {
           meeting: {
             uid,

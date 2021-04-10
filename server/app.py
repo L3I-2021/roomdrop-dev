@@ -377,42 +377,65 @@ def upload_file(uid):
 
     # If author is the host
     if author_uid == meeting.host_uid:
-        pass
+        author_fullname = meeting.host_fullname
     else:
         # Get corresponding guest
         guest = Guest.query.filter_by(uid=author_uid).first()
 
         if guest is None:
-            return jsonify(error='Unaithorized: guest not found',
+            return jsonify(error='Unauthorized: guest not found',
                            author_uid=author_uid)
+        else:
+            author_fullname = guest.fullname
 
-    #TODO Check for no duplicate filenames from the same author
+    # Check for no duplicate filenames from the same author
+    existingFile = File.query.filter_by(filename=reqFile.filename,
+                                        meeting_uid=meeting.uid,
+                                        author_uid=author_uid).first()
 
-    # Create file
-    file_uid = gen_uid()
-    save_path = os.path.join(app.config['UPLOADS'], meeting.uid, file_uid)
+    # If file doesnt exist
+    if existingFile is None:
+        # Create file
+        file_uid = gen_uid()
+        save_path = os.path.join(app.config['UPLOADS'], meeting.uid, file_uid)
 
-    file = File(
-        uid=file_uid,
-        meeting_uid=meeting.uid,
-        author_uid=author_uid,
-        filename=secure_filename(reqFile.filename),
-        local_path='/',  #TODO change this
-        save_path=save_path)
+        file = File(
+            uid=file_uid,
+            meeting_uid=meeting.uid,
+            author_uid=author_uid,
+            filename=secure_filename(reqFile.filename),
+            local_path='/',  #TODO change this
+            save_path=save_path)
 
-    # Create meeting folder if doesn't exist
-    meeting_folder = os.path.join(app.config['UPLOADS'], meeting.uid)
-    if not os.path.exists(meeting_folder):
-        os.mkdir(meeting_folder)
+        # Create meeting folder if doesn't exist
+        meeting_folder = os.path.join(app.config['UPLOADS'], meeting.uid)
+
+        if not os.path.exists(meeting_folder):
+            os.mkdir(meeting_folder)
+
+        db.session.add(file)
+        db.session.commit()
+
+    else:
+        # Update existing file
+        save_path = os.path.join(app.config['UPLOADS'], meeting.uid,
+                                 existingFile.uid)
 
     # Upload file
     reqFile.save(save_path)
 
-    db.session.add(file)
-    db.session.commit()
+    # Notify the room
+    sio.emit("new file", {
+        'filename': reqFile.filename,
+        'author_uid': author_uid,
+        'author_fullname': author_fullname,
+    },
+             room=uid)
+
+    returnFile = file if existingFile is None else existingFile
 
     return jsonify(message=f'File {reqFile.filename} uploaded successfully',
-                   file=file.as_json())
+                   file=returnFile.as_json())
 
 
 @app.route('/meetings/<uid>/files/download')
@@ -458,6 +481,19 @@ def download_file(uid):
     else:
         folder = os.path.join(app.config['UPLOADS'], meeting.uid)
         return send_from_directory(folder, file.uid, as_attachment=True)
+
+
+# Test route
+@app.route("/meetings/<uid>/files/new")
+def ping_meeting(uid):
+    sio.emit("new file", {
+        'filename': request.args.get('filename'),
+        'author_uid': request.args.get('author_uid'),
+        'author_fullname': request.args.get('author_fullname')
+    },
+             room=uid)
+
+    return jsonify()
 
 
 def test_db():

@@ -1,4 +1,5 @@
 const fs = require("fs"); // file system
+const path = require("path");
 const { ipcRenderer } = require("electron");
 
 // Form elements
@@ -67,9 +68,15 @@ form.onsubmit = function (e) {
       else {
         const credPath = "/tmp/guest.credentials.json";
         const { uid, title, host_fullname, host_uid, password } = res.meeting;
-        const fuseMountpoint = "/tmp/" + uid + "." + password;
+        const { guest } = res;
+        // FUSE mountpoint = ~ / Roomdrop / MEETING_UID . MEETING_PASSWORD
+        const fuseMountpoint = path.join(
+          process.env.HOME,
+          "Roomdrop",
+          uid + "." + guest.uid
+        );
         const credentials = {
-          guest: res.guest,
+          guest,
           meeting: {
             uid,
             title,

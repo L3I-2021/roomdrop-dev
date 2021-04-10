@@ -1,5 +1,6 @@
 const { ipcRenderer, shell } = require("electron");
 const fs = require("fs");
+const path = require("path");
 
 // Get meeting credentials
 const credPath = "/tmp/guest.credentials.json";
@@ -48,6 +49,13 @@ socket.on("connect", () => {
     guest_fullname: guest.fullname,
     meeting_uid: meeting.uid,
   });
+
+  // Create public folder
+  const PUBLIC_PATH = path.join(meeting.fuseMountpoint, "public");
+
+  if (!fs.existsSync(PUBLIC_PATH)) {
+    fs.mkdirSync(PUBLIC_PATH);
+  }
 });
 
 // On new guest join
@@ -56,18 +64,28 @@ socket.on("new join", function (data) {
 
   // mettre a jour la liste des particiapnts
   updateGuestList(data.guests);
-});
 
-// On new join
-socket.on("new join", function (data) {
   const { guest_fullname } = data;
 
   // Create a new directory named after the new guest
-  const guestDirPath = meeting.fuseMountpoint + "/" + guest_fullname;
+  const guestDirPath = path.join(meeting.fuseMountpoint, guest_fullname);
 
   if (!fs.existsSync(guestDirPath)) {
     fs.mkdirSync(guestDirPath);
   }
+});
+
+socket.on("new file", function (data) {
+  // Create a new file in the fusemount directory
+  const { filename, author_fullname } = data;
+
+  const downloadPath = path.join(
+    meeting.fuseMountpoint,
+    author_fullname === meeting.host_fullname ? "public" : author_fullname,
+    filename
+  );
+
+  fs.writeFileSync(downloadPath, "", { encoding: "utf-8" });
 });
 
 // On meeting end

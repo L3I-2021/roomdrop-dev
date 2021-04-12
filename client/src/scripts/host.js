@@ -14,6 +14,20 @@ const { meeting } = credentials;
 
 console.log(credentials);
 
+// Information elements
+const title = document.querySelector("#title");
+const host_fullname = document.querySelector("#host_fullname");
+const uid = document.querySelector("#uid");
+const password = document.querySelector("#password");
+const mountpoint = document.querySelector("#mountpoint");
+
+// Update informations
+title.innerHTML = meeting.title;
+host_fullname.innerHTML = meeting.host_fullname;
+uid.innerHTML = meeting.uid;
+password.innerHTML = meeting.password;
+mountpoint.innerHTML = meeting.mountpoint;
+
 const BASE =
   process.env.ENV === "production"
     ? "http://pacific-wave-46729.herokuapp.com"
@@ -63,31 +77,29 @@ socket.on("new file", function (data) {
   // Create a new file in the fusemount directory
   const { filename, author_fullname } = data;
 
-  const downloadPath = path.join(
-    meeting.fuseMountpoint,
-    author_fullname === meeting.host_fullname ? "public" : author_fullname,
-    filename
-  );
+  // Is the fie from the host himself ?
+  const fromHost = author_fullname === meeting.host_fullname;
 
-  fs.writeFileSync(downloadPath, "", { encoding: "utf-8" });
+  // If so then do nothing
+  if (fromHost) return;
+  // Otherwise:
+  // Create a new file in the FUSE mountpoint
+  // So it can detect it and then download the file
+  // from the server
+  else {
+    const downloadPath = path.join(
+      meeting.fuseMountpoint,
+      author_fullname,
+      filename
+    );
+
+    // Create an empty file
+    fs.writeFileSync(downloadPath, "", { encoding: "utf-8" });
+  }
 });
 
 // On meeting end
 socket.on("end", function (data) {});
-
-// Information elements
-const title = document.querySelector("#title");
-const host_fullname = document.querySelector("#host_fullname");
-const uid = document.querySelector("#uid");
-const password = document.querySelector("#password");
-const mountpoint = document.querySelector("#mountpoint");
-
-// Update informations
-title.innerHTML = meeting.title;
-host_fullname.innerHTML = meeting.host_fullname;
-uid.innerHTML = meeting.uid;
-password.innerHTML = meeting.password;
-mountpoint.innerHTML = meeting.mountpoint;
 
 // Guest list related stuff
 const guestCount = document.querySelector("#guestCount");

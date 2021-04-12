@@ -6,6 +6,10 @@ server/uploads
 
 # FUSE - Python-fuse fork
 fuse/build
+fuse/host
+fuse/guest
 
 # Python cache related stuff
 *.pyc
+
+.draft

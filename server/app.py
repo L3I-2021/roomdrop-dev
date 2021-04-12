@@ -443,19 +443,22 @@ def download_file(uid):
     # return send_from_directory('.', filename='tux.png', as_attachment=True)
     """ Download a file """
 
-    # ?filename=enonce.txt&author_uid=158d&password=9599
+    # ?filename=enonce.txt&author_fullname=John%20Doe158d&password=9599
 
     # Get information from args and form data
     filename = request.args.get('filename')
-    author_uid = request.args.get('author_uid')
+    author_fullname = request.args.get('author_fullname')
     password = request.args.get('password')
 
     # Error checking
     if filename is None:
         return jsonify(error='Missing argument: filename')
 
-    if author_uid is None:
-        return jsonify(error="Missing argument: author_uid")
+    if author_fullname is None:
+        return jsonify(error="Missing argument: author_fullname")
+
+    if password is None:
+        return jsonify(error="Missing argument: password")
 
     # Get corresponding meeting
     meeting = Meeting.query.filter_by(uid=uid).first()
@@ -463,13 +466,20 @@ def download_file(uid):
     if meeting is None:
         return jsonify(error='Meeting not found')
 
+    # Get corresponding guest
+    author = Guest.query.filter_by(meeting_uid=meeting.uid,
+                                   fullname=author_fullname).first()
+
+    if author is None:
+        return jsonify(error='Guest not found')
+
     # Check password
     if password != meeting.password:
         return jsonify(error='Unauthorized: invalid password')
 
     # Get corresponding file
     file = File.query.filter_by(meeting_uid=meeting.uid,
-                                author_uid=author_uid,
+                                author_uid=author.uid,
                                 filename=filename).first()
 
     # If file not found

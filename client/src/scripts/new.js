@@ -80,7 +80,10 @@ form.onsubmit = function (e) {
           password,
         } = res.meeting;
         // FUSE mountpoint = ~ / Roomdrop / MEETING_UID . MEETING_PASSWORD
-        const fuseMountpoint = path.join(process.env.HOME, "Roomdrop", uid);
+        // const fuseMountpoint = path.join(process.env.HOME, "Roomdrop", uid);
+        const fuseMountpoint = "/home/webdev/Desktop/roomdrop-dev/fuse/host";
+
+        // Meeting credentials
         const credentials = {
           meeting: {
             uid,
@@ -98,8 +101,8 @@ form.onsubmit = function (e) {
         // write credentials to a file
         fs.writeFileSync(credPath, JSON.stringify(credentials), writeOpts);
 
-        // Make fuse directory mountpoint
-        fs.mkdirSync(fuseMountpoint);
+        // Create FUSE mount directory
+        // fs.mkdirSync(fuseMountpoint);
 
         // submit the form and go to next page
         form.submit();

@@ -125,8 +125,9 @@ class HostFS(Fuse):
     def fsinit(self):
         os.chdir(self.root)
 
-    class XmpFile(object):
+    class MeetingFile(object):
         def __init__(self, path, flags, *mode):
+            print(f'__init__ {path}')
             self.file = os.fdopen(os.open("." + path, flags, *mode),
                                   flag2mode(flags))
             self.fd = self.file.fileno()
@@ -136,6 +137,10 @@ class HostFS(Fuse):
                 self.iolock = None
             else:
                 self.iolock = Lock()
+
+            # If file is in a guest folder then download it
+            if path.split('/')[1] != 'public':
+                client.download(path)
 
         def read(self, length, offset):
             if self.iolock:
@@ -149,6 +154,13 @@ class HostFS(Fuse):
                 return os.pread(self.fd, length, offset)
 
         def write(self, buf, offset):
+
+            # The writing of large files as images
+            # are done by chunks of 4096 bytes.
+            # We can assume that if the size of the buffer is lower
+            # than 4096 then it must be the last chunk
+            CHUNK_SIZE = 4096
+
             if self.iolock:
                 self.iolock.acquire()
                 try:
@@ -157,16 +169,22 @@ class HostFS(Fuse):
 
                     res = len(buf)
 
-                    # Upload file
-                    client.upload(self.path)
+                    # The file should be uploaded if its in the public folder
+                    if self.path.split(
+                            '/')[1] == 'public' and len(buf) < CHUNK_SIZE:
+                        client.upload(self.path)
+
                     return res
                 finally:
                     self.iolock.release()
             else:
                 res = os.pwrite(self.fd, buf, offset)
 
-                # Upload file
-                client.upload(self.path)
+                # The file should be uploaded if its in the public folder
+                if self.path.split(
+                        '/')[1] == 'public' and len(buf) < CHUNK_SIZE:
+                    print('uploading')
+                    client.upload(self.path)
 
                 return res
 
@@ -196,8 +214,7 @@ class HostFS(Fuse):
             self.file.truncate(len)
 
     def main(self, *a, **kw):
-
-        self.file_class = self.XmpFile
+        self.file_class = self.MeetingFile
 
         return Fuse.main(self, *a, **kw)
 

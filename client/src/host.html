@@ -1,21 +1,228 @@
-<body>
-  <p>Host: <span id="host_fullname"></span></p>
-  <h1 id="title"></h1>
-  <p>Uid: <span id="uid"></span></p>
-  <p>Password: <span id="password"></span></p>
-  <p>Location: <span id="mountpoint"></span></p>
-  <button id="open">Ouvrir</button>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roomdrop Chat</title>
+    <!-- TAILWINDCSS CDN (TEMPORARLY) -->
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles/meeting.css" />
+  </head>
+  <body>
+    <div class="h-screen max-h-screen flex flex-col">
+      <!-- HEADER -->
+      <header
+        class="header text-white py-4 px-8 flex justify-between items-center"
+      >
+        <div>
+          <p class="text-xs uppercase text-purple-300">
+            Host: <span id="host_fullname" class="font-bold"></span>
+          </p>
+          <h1 id="title" class="text-4xl font-bold"></h1>
+        </div>
 
-  <div>
-    <h3>Guests: <span id="guestCount"></span></h3>
+        <div class="flex gap-4 items-center">
+          <div>
+            <p class="text-xs uppercase text-purple-300">ID</p>
+            <p id="uid" class="text-lg font-bold"></p>
+          </div>
+          <div>
+            <p class="text-xs uppercase text-purple-300">Password</p>
+            <p id="password" class="text-lg font-bold"></p>
+          </div>
+          <div class="">
+            <button
+              id="copy"
+              class="p-2 bg-gray-600 rounded-lg flex items-center gap-2 font-bold"
+            >
+              <!-- Copy icon @ Heroicons -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div>
+            <button
+              id="end"
+              class="bg-red-500 hover:bg-red-700 text-white font-bold p-2 rounded-lg flex items-center gap-2"
+            >
+              <!-- Exit icon @ Heroicons -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                />
+              </svg>
+              Leave
+            </button>
+          </div>
+        </div>
+      </header>
+      <!-- ================================================================== -->
 
-    <ul id="guestList"></ul>
-  </div>
+      <!-- MAIN CONTENNT -->
+      <main class="flex-1 grid grid-cols-3 items-start overflow-hidden">
+        <!-- SIDEBAR -->
+        <div class="px-2">
+          <!-- Mountpoint -->
+          <div class="">
+            <div class="flex items-center gap-2 p-2">
+              <!-- Download folder icon @ Heroicons -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-8 w-8 text-purple-600"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"
+                />
+                <path
+                  stroke="#fff"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10 9v4m0 0l-2-2m2 2l2-2"
+                />
+              </svg>
+              <div class="flex-1">
+                <h3 class="text-2xl font-bold p-2">Location</h3>
+              </div>
+            </div>
 
-  <div>
-    <button id="end">End meeting</button>
-  </div>
+            <div class="p-2 pb-4 border-b">
+              <p class="mountpoint-text mb-2">
+                <span id="mountpoint"></span>
+              </p>
 
-  <script src="./scripts/lib/socketio.min.js"></script>
-  <script src="./scripts/host.js"></script>
-</body>
+              <button
+                id="open"
+                class="p-2 bg-gray-600 rounded-lg flex items-center gap-2 font-bold text-white"
+              >
+                <!-- Open folder icon @ Heroicons -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <span>Open</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Guests -->
+          <div class="">
+            <div class="flex items-center gap-2 p-2">
+              <!-- Users group icons @ Heroicons -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-8 w-8 text-purple-600"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"
+                />
+              </svg>
+              <div class="flex-1 flex">
+                <h3 class="text-2xl font-bold p-2">Guests</h3>
+
+                <div id="guestCount" class="text-lg">99</div>
+              </div>
+            </div>
+
+            <div class="">
+              <ul id="guestList" class="py-2"></ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- CHAT -->
+        <div class="col-span-2 h-full flex flex-col border-l">
+          <div class="flex items-center gap-2 px-4 py-2 border-b-2">
+            <!-- Message icon -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-8 w-8 text-purple-600"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"
+              />
+              <path
+                d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"
+              />
+            </svg>
+            <h3 class="text-2xl font-bold p-2">Conversation</h3>
+          </div>
+
+          <!-- MESSAGE FEED -->
+          <div
+            id="messageFeed"
+            class="bg-purple-50 h-1 flex-grow overflow-x-hidden p-4 flex flex-col items-start"
+          ></div>
+
+          <!-- Champ de texte -->
+          <div class="bg-white flex items-center border-t-2">
+            <input
+              id="messageInput"
+              class="p-4 w-full focus:outline-none"
+              type="text"
+              placeholder="Enter your message"
+            />
+
+            <button id="send" class="m-1 p-3 rounded-xl bg-primary">
+              <!-- Send icon @ Heroicon -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-4 w-4 transform rotate-90 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="./scripts/lib/socketio.min.js"></script>
+    <script src="./scripts/host.js"></script>
+  </body>
+</html>

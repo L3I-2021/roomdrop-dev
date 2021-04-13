@@ -172,6 +172,21 @@ def on_end(data):
     sio.emit('ended', {}, room=meeting_uid)
 
 
+@sio.on('message')
+def on_message(data):
+    meeting_uid = data.get('meeting_uid')
+
+    time = datetime.now().strftime("%H:%M")
+
+    response = {
+        'from': data.get('from'),
+        'text': data.get('text'),
+        'time': time
+    }
+
+    sio.emit('new message', response, room=meeting_uid)
+
+
 # Routes
 @app.route('/meetings')
 def meeting_index():

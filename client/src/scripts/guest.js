@@ -30,6 +30,10 @@ password.innerHTML = meeting.password;
 guest_fullname.innerHTML = guest.fullname;
 mountpoint.innerHTML = meeting.mountpoint;
 
+// Message related elements
+const messageFeed = document.querySelector("#messageFeed");
+const messageInput = document.querySelector("#messageInput");
+
 const BASE =
   process.env.ENV === "production"
     ? "http://pacific-wave-46729.herokuapp.com"
@@ -113,6 +117,58 @@ socket.on("new file", function (data) {
   }
 });
 
+// On new message
+socket.on("new message", function (message) {
+  addMessage(message);
+});
+
+// Send message on enter
+messageInput.onkeypress = function (e) {
+  const ENTER = "Enter";
+
+  if (e.key === ENTER) {
+    sendMessage();
+  }
+};
+
+// Add a message to the message feed
+function addMessage(message) {
+  const messageEl = document.createElement("div");
+  // Add TailwindCSS classes to the message element
+  messageEl.classList.add(
+    "bg-white",
+    "px-3",
+    "py-2",
+    "rounded-lg",
+    "border",
+    "mb-2",
+    "shadow",
+    "max-w-lg"
+  );
+
+  // Create the from element
+  const fromEl = document.createElement("h6");
+  fromEl.appendChild(document.createTextNode(message.from));
+  fromEl.classList.add("font-bold", "text-purple-600");
+
+  // Create message paragraph
+  const textEl = document.createElement("p");
+  textEl.appendChild(document.createTextNode(message.text));
+
+  // Create message time text
+  const timeEl = document.createElement("p");
+  timeEl.appendChild(document.createTextNode(message.time));
+  timeEl.classList.add("text-right", "text-xs", "text-gray-400");
+
+  // Append created elements to the message
+  messageEl.appendChild(fromEl);
+  messageEl.appendChild(textEl);
+  messageEl.appendChild(timeEl);
+
+  // Append message to the feed
+  messageFeed.appendChild(messageEl);
+}
+
 // On meeting end
 socket.on("end", function (data) {});
 
@@ -135,6 +191,7 @@ function updateGuestList(guests) {
   // Add each guest to the list
   for (let i = 0; i < guests.length; i++) {
     let li = document.createElement("li");
+    li.classList.add("py-2", "border-b", "mx-2");
 
     li.appendChild(document.createTextNode(guests[i]));
 
@@ -145,6 +202,8 @@ function updateGuestList(guests) {
 // Buttons
 const openBtn = document.querySelector("#open");
 const leaveBtn = document.querySelector("#leave");
+const copyBtn = document.querySelector("#copy");
+const sendBtn = document.querySelector("#send");
 
 openBtn.onclick = function () {
   // Open file explorer on the meeting mountpoint
@@ -155,6 +214,14 @@ leaveBtn.onclick = function () {
   // Close the window so that it shows a confirmation message dialog
   window.close();
 };
+
+copyBtn.onclick = function () {
+  const text = `UID: ${meeting.uid}, Password: ${meeting.password}`;
+
+  window.navigator.clipboard.writeText(text).then(console.log);
+};
+
+sendBtn.onclick = sendMessage;
 
 ipcRenderer.on("window:close-intent", onCloseIntent);
 
@@ -192,6 +259,21 @@ function leaveMeeting() {
   }).then(function (res) {
     return res.json();
   });
+}
+
+function sendMessage() {
+  const text = messageInput.value.trim();
+
+  if (text.length === 0) return;
+
+  const message = {
+    text,
+    from: guest.fullname,
+  };
+
+  socket.emit("message", message);
+
+  messageInput.value = "";
 }
 
 function removeCredentials() {

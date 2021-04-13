@@ -1,0 +1,20 @@
+:root {
+  --blue: #273755;
+}
+.header {
+  background: var(--blue);
+}
+
+.text-primary {
+  color: var(--blue);
+  /* color: red; */
+}
+
+.bg-primary {
+  background: var(--blue);
+  /* color: red; */
+}
+
+.mountpoint-text {
+  line-break: anywhere;
+}

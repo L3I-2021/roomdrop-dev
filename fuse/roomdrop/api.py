@@ -30,7 +30,7 @@ class HostClient(Client):
     """ Host client that handles file uploads and downloads.
         It uploads every new file added in the public folder
         And downloads every file added in a guest folder
-    """"
+    """
 
     def __init__(self):
         Client.__init__(self, HOST_CREDS_PATH)
@@ -97,7 +97,7 @@ class GuestClient(Client):
     """ Guest client that handles file uploads and downloads.
         It uploads every new file added in the guest folder
         And downloads every file added in the public folder
-    """"
+    """
 
     def __init__(self):
         Client.__init__(self, GUEST_CREDS_PATH)

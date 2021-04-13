@@ -470,8 +470,10 @@ def download_file(uid):
     author = Guest.query.filter_by(meeting_uid=meeting.uid,
                                    fullname=author_fullname).first()
 
-    if author is None:
+    if author is None and author_fullname != meeting.host_fullname:
         return jsonify(error='Guest not found')
+
+    author_uid = author.uid if author is not None else meeting.host_uid
 
     # Check password
     if password != meeting.password:
@@ -479,7 +481,7 @@ def download_file(uid):
 
     # Get corresponding file
     file = File.query.filter_by(meeting_uid=meeting.uid,
-                                author_uid=author.uid,
+                                author_uid=author_uid,
                                 filename=filename).first()
 
     # If file not found

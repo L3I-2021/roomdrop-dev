@@ -37,6 +37,7 @@ form.onsubmit = function (e) {
   // Prevent form from submiting
   e.preventDefault();
 
+  // If mountpoint was not provided
   if (mountpoint.value === "") {
     alert("A mountpoint is required");
     return;
@@ -70,10 +71,14 @@ form.onsubmit = function (e) {
         const { uid, title, host_fullname, host_uid, password } = res.meeting;
         const { guest } = res;
         // FUSE mountpoint = ~ / Roomdrop / MEETING_UID . MEETING_PASSWORD
+        // const fuseMountpoint = path.join(
+        //   process.env.HOME,
+        //   "Roomdrop",
+        //   uid + "." + guest.uid
+        // );
         const fuseMountpoint = path.join(
           process.env.HOME,
-          "Roomdrop",
-          uid + "." + guest.uid
+          "Desktop/roomdrop-dev/fuse/guest"
         );
         const credentials = {
           guest,
@@ -93,7 +98,7 @@ form.onsubmit = function (e) {
         fs.writeFileSync(credPath, JSON.stringify(credentials), writeOpts);
 
         // Make fuse directory mountpoint
-        fs.mkdirSync(fuseMountpoint);
+        // fs.mkdirSync(fuseMountpoint);
 
         // submit the form and go to next page
         form.submit();

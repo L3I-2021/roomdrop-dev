@@ -49,10 +49,12 @@ socket.onAny(function (event, data) {
 socket.on("connect", function () {
   console.log("connected");
 
+  // Notify meeting attendants
   socket.emit("join", {
     meeting_uid: meeting.uid,
   });
 
+  // Create meeting public folder
   const PUBLIC_PATH = path.join(meeting.fuseMountpoint, "public");
 
   if (!fs.existsSync(PUBLIC_PATH)) {
@@ -161,7 +163,7 @@ function onCloseIntent(event, args) {
         socket.emit("end", { meeting_uid: meeting.uid });
 
         // Delete fuse directory (TEMPORARY)
-        fs.rmSync(meeting.fuseMountpoint, { recursive: true, force: true });
+        // fs.rmSync(meeting.fuseMountpoint, { recursive: true, force: true });
 
         // Notify main process to close the window
         ipcRenderer.send("window:close");

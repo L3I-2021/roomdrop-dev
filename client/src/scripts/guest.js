@@ -14,6 +14,22 @@ const { meeting, guest } = credentials;
 
 console.log(credentials);
 
+// Information elements
+const title = document.querySelector("#title");
+const host_fullname = document.querySelector("#host_fullname");
+const uid = document.querySelector("#uid");
+const password = document.querySelector("#password");
+const guest_fullname = document.querySelector("#guest_fullname");
+const mountpoint = document.querySelector("#mountpoint");
+
+// Update informations
+title.innerHTML = meeting.title;
+host_fullname.innerHTML = meeting.host_fullname;
+uid.innerHTML = meeting.uid;
+password.innerHTML = meeting.password;
+guest_fullname.innerHTML = guest.fullname;
+mountpoint.innerHTML = meeting.mountpoint;
+
 const BASE =
   process.env.ENV === "production"
     ? "http://pacific-wave-46729.herokuapp.com"
@@ -25,11 +41,12 @@ const socket = io(BASE);
 socket.onAny(function (event, data) {
   console.log(event, data);
 
+  // Update guests list when a guest joins or leaves
   if (event === "new join" || event === "leaved") {
     updateGuestList(data.guests);
   }
 
-  // If meeting has ended, redirect to homepage
+  // If meeting has ended, quit the application
   if (event == "ended") {
     socket.emit("leave", {
       guest_fullname: guest.fullname,
@@ -45,12 +62,14 @@ socket.onAny(function (event, data) {
 // Once connected, join the meeting room
 socket.on("connect", () => {
   console.log("connected");
+
+  // Notify meeting attendants
   socket.emit("join", {
     guest_fullname: guest.fullname,
     meeting_uid: meeting.uid,
   });
 
-  // Create public folder
+  // Create meeting public folder
   const PUBLIC_PATH = path.join(meeting.fuseMountpoint, "public");
 
   if (!fs.existsSync(PUBLIC_PATH)) {
@@ -75,37 +94,27 @@ socket.on("new join", function (data) {
   }
 });
 
+// On new file add
 socket.on("new file", function (data) {
   // Create a new file in the fusemount directory
   const { filename, author_fullname } = data;
 
-  const downloadPath = path.join(
-    meeting.fuseMountpoint,
-    author_fullname === meeting.host_fullname ? "public" : author_fullname,
-    filename
-  );
+  // If the new file is from the host
+  // Create a new file in the FUSE mountpoint
+  // So it can detect it and then download the file
+  // from the server
+  if (author_fullname === meeting.host_fullname) {
+    const downloadPath = path.join(meeting.fuseMountpoint, "public", filename);
 
-  fs.writeFileSync(downloadPath, "", { encoding: "utf-8" });
+    // Create an empty file
+    fs.writeFileSync(downloadPath, "", {
+      encoding: "utf-8",
+    });
+  }
 });
 
 // On meeting end
 socket.on("end", function (data) {});
-
-// Information elements
-const title = document.querySelector("#title");
-const host_fullname = document.querySelector("#host_fullname");
-const uid = document.querySelector("#uid");
-const password = document.querySelector("#password");
-const guest_fullname = document.querySelector("#guest_fullname");
-const mountpoint = document.querySelector("#mountpoint");
-
-// Update informations
-title.innerHTML = meeting.title;
-host_fullname.innerHTML = meeting.host_fullname;
-uid.innerHTML = meeting.uid;
-password.innerHTML = meeting.password;
-guest_fullname.innerHTML = guest.fullname;
-mountpoint.innerHTML = meeting.mountpoint;
 
 // Guest list
 const guestCount = document.querySelector("#guestCount");
@@ -167,7 +176,7 @@ function onCloseIntent(event, args) {
       });
 
       // Delete fuse directory (TEMPORARY)
-      fs.rmSync(meeting.fuseMountpoint, { recursive: true, force: true });
+      // fs.rmSync(meeting.fuseMountpoint, { recursive: true, force: true });
 
       // Notify main process to close the window
       ipcRenderer.send("window:close");

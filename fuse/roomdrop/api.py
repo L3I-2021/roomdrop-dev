@@ -31,10 +31,6 @@ class HostClient(Client):
         It uploads every new file added in the public folder
         And downloads every file added in a guest folder
     """
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
     def __init__(self):
         Client.__init__(self, HOST_CREDS_PATH)
 
@@ -101,10 +97,6 @@ class GuestClient(Client):
         It uploads every new file added in the guest folder
         And downloads every file added in the public folder
     """
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
     def __init__(self):
         Client.__init__(self, GUEST_CREDS_PATH)
 

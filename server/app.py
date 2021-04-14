@@ -31,7 +31,7 @@ db = SQLAlchemy(app)
 
 # Utility functions
 def gen_uid():
-    return str(uuid4())[:4]
+    return str(uuid4())[:6]
 
 
 # Database models

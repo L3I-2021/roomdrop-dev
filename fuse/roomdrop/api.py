@@ -1,4 +1,5 @@
 import requests, json, os
+from aes import encrypt_sha256, encrypt_AES, decrypt_AES
 
 HOST_CREDS_PATH = '/tmp/host.credentials.json'
 GUEST_CREDS_PATH = '/tmp/guest.credentials.json'
@@ -18,6 +19,16 @@ class Client:
     def __init__(self, creds_path):
         with open(creds_path, 'r') as credentials_file:
             self.credentials = json.loads(credentials_file.read())
+
+            # Create a folder in /tmp to store encrypted files
+            self.ENCRYPTED_PATH = os.path.join('/tmp', 'encrypted')
+            if not os.path.exists(self.ENCRYPTED_PATH):
+                os.mkdir(self.ENCRYPTED_PATH)
+
+            # Generate SHA signature from meeting UID and password
+            self.signature = encrypt_sha256(
+                self.credentials['meeting']['uid'],
+                self.credentials['meeting']['password'])
 
     def upload(self, path_to_file):
         pass
@@ -43,18 +54,26 @@ class HostClient(Client):
         abspath = os.path.join(self.credentials['meeting']['mountpoint'],
                                path_to_file[1:])
 
-        print(os.stat(abspath).st_size)
-
         meeting_uid = self.credentials['meeting'][
             'uid']  # Meeting uid from credentials
-        params = {'author_uid': self.credentials['meeting']['host_uid']}
+        author_uid = self.credentials['meeting']['host_uid']
+        filename = path_to_file.split('/')[-1]
+
+        params = {'author_uid': author_uid}
         endpoint = f'/meetings/{meeting_uid}/files/upload'
 
-        # Attached file
-        files = {'file': open(abspath, 'rb')}
+        # Create encrypted file before upload
+        encrypted_file_path = encrypt_AES(abspath, self.signature)
+
+        # Attach encrypted file
+        files = {'file': open(encrypted_file_path, 'rb')}
 
         # Make a request with attached file
         res = requests.post(API_URL + endpoint, files=files, params=params)
+
+        # Delete the encrypted file that was created
+        if os.path.exists(encrypted_file_path):
+            os.remove(encrypted_file_path)
 
     def download(self, path_to_file):
         # Ignore hidden files
@@ -91,6 +110,15 @@ class HostClient(Client):
                 with open(save_path, 'wb') as downloaded_file:
                     downloaded_file.write(res.content)
 
+                # Decrypt downloaded file (ex: foo.txt.encrypted)
+                encrypted_file_path = os.path.join(
+                    self.credentials['meeting']['mountpoint'],
+                    path_to_file[1:])
+                decrypt_AES(encrypted_file_path, self.signature)
+
+                # Delete encrypted file
+                os.remove(encrypted_file_path)
+
 
 class GuestClient(Client):
     """ Guest client that handles file uploads and downloads.
@@ -109,18 +137,24 @@ class GuestClient(Client):
         abspath = os.path.join(self.credentials['meeting']['mountpoint'],
                                path_to_file[1:])
 
-        print(os.stat(abspath).st_size)
-
         meeting_uid = self.credentials['meeting'][
             'uid']  # Meeting uid from credentials
-        params = {'author_uid': self.credentials['guest']['uid']}
+        author_uid = self.credentials['guest']['uid']
+        params = {'author_uid': author_uid}
         endpoint = f'/meetings/{meeting_uid}/files/upload'
 
-        # Attached file
-        files = {'file': open(abspath, 'rb')}
+        # Create encrypted file before upload
+        encrypted_file_path = encrypt_AES(abspath, self.signature)
+
+        # Attached encrypted file
+        files = {'file': open(encrypted_file_path, 'rb')}
 
         # Make a request with attached file
         res = requests.post(API_URL + endpoint, files=files, params=params)
+
+        # Delete the encrypted file that was created
+        if os.path.exists(encrypted_file_path):
+            os.remove(encrypted_file_path)
 
     def download(self, path_to_file):
         # Ignore hidden files
@@ -157,3 +191,12 @@ class GuestClient(Client):
             if 'error' not in res.text:
                 with open(save_path, 'wb') as downloaded_file:
                     downloaded_file.write(res.content)
+
+                # Decrypt downloaded file (ex: foo.txt.encrypted)
+                encrypted_file_path = os.path.join(
+                    self.credentials['meeting']['mountpoint'],
+                    path_to_file[1:])
+                decrypt_AES(encrypted_file_path, self.signature)
+
+                # Delete encrypted file
+                os.remove(encrypted_file_path)

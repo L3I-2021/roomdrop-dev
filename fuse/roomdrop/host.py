@@ -183,7 +183,6 @@ class HostFS(Fuse):
                 # The file should be uploaded if its in the public folder
                 if self.path.split(
                         '/')[1] == 'public' and len(buf) < CHUNK_SIZE:
-                    print('uploading')
                     client.upload(self.path)
 
                 return res

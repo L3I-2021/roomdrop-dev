@@ -155,10 +155,6 @@ class HostFS(Fuse):
                 return os.pread(self.fd, length, offset)
 
         def write(self, buf, offset):
-            if 'Trash' not in self.path:
-                for i in range(20):
-                    print(f'{self.path} {buf}')
-
             # The writing of large files as images
             # are done by chunks of 4096 bytes.
             # We can assume that if the size of the buffer is lower
@@ -173,9 +169,6 @@ class HostFS(Fuse):
 
                     res = len(buf)
 
-                    for i in range(50):
-                        print(f'iolock buffer = {buf}')
-
                     # The file should be uploaded if its in the public folder
                     if self.path.split('/')[1] == client.credentials['guest'][
                             'fullname'] and len(buf) < CHUNK_SIZE:
@@ -186,9 +179,6 @@ class HostFS(Fuse):
                     self.iolock.release()
             else:
                 res = os.pwrite(self.fd, buf, offset)
-
-                for i in range(50):
-                    print(f'buffer = {buf}')
 
                 # If the empty buffer was written (by roomdrop-dev/client@guest.js:110)
 

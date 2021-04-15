@@ -67,7 +67,7 @@ class HostFS(Fuse):
         for e in os.listdir("." + path):
             yield fuse.Direntry(e)
 
-    def unlink(self, path)
+    def unlink(self, path):
         # Delete file for others
         if path.startswith('/public'):
             client.delete(path)

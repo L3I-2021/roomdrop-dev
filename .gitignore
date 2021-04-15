@@ -10,6 +10,9 @@ fuse/build
 fuse/host
 fuse/guest
 
+# Heroku
+heroku/
+
 # Python cache related stuff
 *.pyc
 

@@ -156,6 +156,22 @@ function addMessage(message) {
   messageFeed.appendChild(messageEl);
 }
 
+// On guest file deleted
+socket.on("delete file guest", function (data) {
+  const { filename, guest_fullname } = data;
+
+  const guestFilePath = path.join(
+    meeting.fuseMountpoint,
+    guest_fullname,
+    filename
+  );
+
+  // Delete file from sytem
+  if (fs.existsSync(guestFilePath)) {
+    fs.rmSync(guestFilePath);
+  }
+});
+
 // On meeting end
 socket.on("end", function (data) {});
 

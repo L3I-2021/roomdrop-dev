@@ -117,6 +117,18 @@ socket.on("new file", function (data) {
   }
 });
 
+// On deleted file from public
+socket.on("delete file public", function (data) {
+  const { filename } = data;
+
+  const publicFilePath = path.join(meeting.fuseMountpoint, "public", filename);
+
+  // Delete file from sytem
+  if (fs.existsSync(publicFilePath)) {
+    fs.rmSync(publicFilePath);
+  }
+});
+
 // On new message
 socket.on("new message", function (message) {
   addMessage(message);

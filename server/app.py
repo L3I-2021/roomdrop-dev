@@ -332,16 +332,6 @@ def get_meeting_guests(uid):
                    success=f'Meeting with uid({meeting.uid}) guest list')
 
 
-@app.route('/meetings/<uid>/guests/<guest_uid>')
-def get_guest(uid, guest_uid):
-    pass
-
-
-@app.route('/meetings/<uid>/guests/<guest_uid>/files')
-def get_guest_files(uid, guest_uid):
-    pass
-
-
 @app.route('/meetings/<uid>/guests/<guest_uid>/leave', methods=['DELETE'])
 def leave_guest(uid, guest_uid):
     # Get corresponding guest
@@ -362,11 +352,6 @@ def leave_guest(uid, guest_uid):
 
         return jsonify(success="Guest leaved successfully",
                        guest=guest.as_json())
-
-
-@app.route('/meetings/<uid>/files')
-def get_meeting_files(uid):
-    pass
 
 
 @app.route('/meetings/<uid>/files/upload', methods=['POST'])
@@ -508,6 +493,123 @@ def download_file(uid):
     else:
         folder = os.path.join(app.config['UPLOADS'], meeting.uid)
         return send_from_directory(folder, file.uid, as_attachment=True)
+
+
+@app.route('/meetings/<uid>/files/public/delete', methods=['DELETE'])
+def delete_public_file(uid):
+    # Get information from args
+    filename = request.args.get('filename')
+    secret_key = request.args.get('secret_key')
+
+    # Error checking
+    if filename is None:
+        return jsonify(error='Missing argument: filename')
+
+    if secret_key is None:
+        return jsonify(error="Missing argument: secret_key")
+
+    # Get corresponding meeting
+    meeting = Meeting.query.filter_by(uid=uid).first()
+
+    # If meeting not found
+    if meeting is None:
+        return jsonify(error="Meeting not found")
+
+    if secret_key != meeting.secret_key:
+        return jsonify(error="Unauthorized: invalid secret_key")
+
+    # Get corresponding file
+    saved_filename = filename + '.encrypted'
+    file = File.query.filter_by(meeting_uid=meeting.uid,
+                                filename=saved_filename,
+                                author_uid=meeting.host_uid).first()
+
+    # If file not found
+    if file is None:
+        return jsonify(error=f'File not found: {filename}')
+
+    else:
+        # Delete file from storage
+        if os.path.exists(file.save_path):
+            os.remove(file.save_path)
+
+            # Delete file from database
+            db.session.delete(file)
+            db.session.commit()
+
+            # Notify room
+            sio.emit('delete file public', {'filename': filename},
+                     room=meeting.uid)
+
+            return jsonify(success=f"File {filename} deleted successfully")
+        else:
+            return jsonify(error="Could not file stored file")
+
+
+@app.route('/meetings/<uid>/files/guests/delete', methods=['DELETE'])
+def delete_guest_file(uid, guest_uid):
+    # Get information from args
+    author_uid = request.args.get('author_uid')
+    filename = request.args.get('filename')
+    password = request.args.get('password')
+
+    # Error checking
+    if author_uid is None:
+        return jsonify(error='Missing argument: author_uid')
+
+    if filename is None:
+        return jsonify(error='Missing argument: filename')
+
+    if password is None:
+        return jsonify(error="Missing argument: password")
+
+    # Get corresponding meeting
+    meeting = Meeting.query.filter_by(uid=uid).first()
+
+    # If meeting not found
+    if meeting is None:
+        return jsonify(error="Meeting not found")
+
+    # Get corresponding guest
+    guest = Guest.query.filter_by(uid=guest_uid).first()
+
+    # If guest not found
+    if guest is None:
+        return jsonify(error="Unauthorized: unknown guest")
+
+    # If invalid password
+    if password != meeting.password:
+        return jsonify(error="Unauthorized: invalid password")
+
+    # Get corresponding file
+    saved_filename = filename + '.encrypted'
+    file = File.query.filter_by(meeting_uid=meeting.uid,
+                                filename=saved_filename,
+                                author_uid=guest.uid).first()
+
+    # If file not found
+    if file is None:
+        return jsonify(error=f'File not found: {filename}')
+
+    else:
+        # Delete file from storage
+        if os.path.exists(file.save_path):
+            os.remove(file.save_path)
+
+            # Delete file from database
+            db.session.delete(file)
+            db.session.commit()
+
+            # Notify room
+            sio.emit("delete file guest", {
+                'filename': filename,
+                'guest_fullname': guest.fullname
+            },
+                     room=meeting.uid)
+
+            return jsonify(success=f"File {filename} deleted successfully")
+        else:
+            return jsonify(error="Could not file stored file")
 
 
 # Test route

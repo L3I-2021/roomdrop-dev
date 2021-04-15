@@ -55,6 +55,9 @@ class HostFS(Fuse):
         self.root = client.credentials['meeting']['mountpoint']
 
     def getattr(self, path):
+        if path.startswith('/.Trash-1000'):
+            return -ENOENT
+
         return os.lstat("." + path)
 
     def readlink(self, path):
@@ -64,8 +67,12 @@ class HostFS(Fuse):
         for e in os.listdir("." + path):
             yield fuse.Direntry(e)
 
-    def unlink(self, path):
-        os.unlink("." + path)
+    def unlink(self, path)
+        # Delete file for others
+        if path.startswith('/public'):
+            client.delete(path)
+        else:
+            os.unlink("." + path)
 
     def rmdir(self, path):
         os.rmdir("." + path)
@@ -127,7 +134,6 @@ class HostFS(Fuse):
 
     class MeetingFile(object):
         def __init__(self, path, flags, *mode):
-            print(f'__init__ {path}')
             self.file = os.fdopen(os.open("." + path, flags, *mode),
                                   flag2mode(flags))
             self.fd = self.file.fileno()

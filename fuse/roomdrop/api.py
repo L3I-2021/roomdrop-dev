@@ -36,6 +36,9 @@ class Client:
     def download(self, path_to_file):
         pass
 
+    def delete(self, path_to_file):
+        pass
+
 
 class HostClient(Client):
     """ Host client that handles file uploads and downloads.
@@ -119,6 +122,34 @@ class HostClient(Client):
                 # Delete encrypted file
                 os.remove(encrypted_file_path)
 
+    def delete(self, path_to_file):
+        for i in range(10):
+            print(f'deleting {path_to_file}')
+
+        # Extract filename from path
+        filename = path_to_file.split('/')[-1]
+
+        # File save location
+        save_path = os.path.join(self.credentials['meeting']['mountpoint'],
+                                 path_to_file[1:])
+
+        meeting_uid = self.credentials['meeting']['uid']
+
+        # Prepare requests
+        params = {
+            'filename': filename,
+            'secret_key': self.credentials['meeting']['secret_key']
+        }
+
+        endpoint = f'/meetings/{meeting_uid}/files/public/delete'
+
+        # Send request to delete file
+        res = requests.delete(API_URL + endpoint, params=params)
+
+        if 'error' not in res.text and os.path.exists(save_path):
+            # Delete file from system
+            os.unlink(save_path)
+
 
 class GuestClient(Client):
     """ Guest client that handles file uploads and downloads.
@@ -200,3 +231,29 @@ class GuestClient(Client):
 
                 # Delete encrypted file
                 os.remove(encrypted_file_path)
+
+    def delete(self, path_to_file):
+        # Extract filename from path
+        filename = path_to_file.split('/')[-1]
+
+        # File location
+        save_path = os.path.join(self.credentials['meeting']['mountpoint'],
+                                 path_to_file[1:])
+
+        meeting_uid = self.credentials['meeting']['uid']
+        guest_uid = self.credentials['guest']['uid']
+
+        # Prepare request params
+        params = {
+            'filename': filename,
+            'password': self.credentials['meeting']['password']
+        }
+
+        endpoint = f'/meetings/{meeting_uid}/files/guests/delete'
+
+        # Send request to delete file
+        res = requests.delete(API_URL + endpoint, params=params)
+
+        if 'error' not in res.text and os.path.exists(save_path):
+            # Delete file from system
+            os.unlink(save_path)

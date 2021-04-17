@@ -547,7 +547,7 @@ def delete_public_file(uid):
 
 
 @app.route('/meetings/<uid>/files/guests/delete', methods=['DELETE'])
-def delete_guest_file(uid, guest_uid):
+def delete_guest_file(uid):
     # Get information from args
     author_uid = request.args.get('author_uid')
     filename = request.args.get('filename')
@@ -571,7 +571,7 @@ def delete_guest_file(uid, guest_uid):
         return jsonify(error="Meeting not found")
 
     # Get corresponding guest
-    guest = Guest.query.filter_by(uid=guest_uid).first()
+    guest = Guest.query.filter_by(uid=author_uid).first()
 
     # If guest not found
     if guest is None:

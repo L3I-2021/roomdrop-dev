@@ -246,13 +246,17 @@ class GuestClient(Client):
         # Prepare request params
         params = {
             'filename': filename,
-            'password': self.credentials['meeting']['password']
+            'password': self.credentials['meeting']['password'],
+            'author_uid': self.credentials['guest']['uid']
         }
 
         endpoint = f'/meetings/{meeting_uid}/files/guests/delete'
 
         # Send request to delete file
         res = requests.delete(API_URL + endpoint, params=params)
+
+        for i in range(50):
+            print(res.text)
 
         if 'error' not in res.text and os.path.exists(save_path):
             # Delete file from system

@@ -1,7 +1,7 @@
 const { ipcRenderer, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
-const { execSync, exec } = require("child_process");
+const { execSync } = require("child_process");
 
 // ==============================================================
 //
@@ -11,6 +11,12 @@ const { execSync, exec } = require("child_process");
 
 // Get meeting credentials from file system
 const credPath = "/tmp/host.credentials.json";
+
+// If credentials file doesnt exist then return to the index page
+if (!fs.existsSync(credPath)) {
+  window.location.href = "index.html";
+}
+
 const credentials = JSON.parse(
   fs.readFileSync(credPath, {
     encoding: "utf-8",
@@ -245,7 +251,7 @@ socket.on("new join", function (data) {
 socket.on("leaved", function (data) {
   const { guest_fullname } = data;
 
-  addNotification(`${guest_fullname} leaved the meeting`);
+  addNotification(`${guest_fullname} left the meeting`);
 });
 
 // On new filed add
@@ -412,7 +418,9 @@ function onCloseIntent(event, args) {
         socket.emit("end", { meeting_uid: meeting.uid });
 
         // Unmount FUSE
-        execSync(`fusermount -u ${meeting.fuseMountpoint}`);
+        try {
+          execSync(`fusermount -u ${meeting.fuseMountpoint}`);
+        } catch (e) {}
 
         // Notify main process to close the window
         ipcRenderer.send("window:close");
@@ -454,5 +462,7 @@ function sendMessage() {
 
 // Function that deletes the credentials files
 function removeCredentials() {
-  fs.rmSync(credPath);
+  if (fs.existsSync(credPath)) {
+    fs.rmSync(credPath);
+  }
 }

@@ -11,6 +11,12 @@ const { execSync } = require("child_process");
 
 // Get meeting credentials
 const credPath = "/tmp/guest.credentials.json";
+
+// If credentials file doesnt exist then return to the index page
+if (!fs.existsSync(credPath)) {
+  window.location.href = "index.html";
+}
+
 const credentials = JSON.parse(
   fs.readFileSync(credPath, {
     encoding: "utf-8",
@@ -416,7 +422,9 @@ function onCloseIntent(event, args) {
       });
 
       // Unmount FUSE
-      execSync(`fusermount -u ${meeting.fuseMountpoint}`);
+      try {
+        execSync(`fusermount -u ${meeting.fuseMountpoint}`);
+      } catch (e) {}
 
       // Notify main process to close the window
       ipcRenderer.send("window:close");
@@ -450,5 +458,7 @@ function sendMessage() {
 }
 
 function removeCredentials() {
-  fs.rmSync(credPath);
+  if (fs.existsSync(credPath)) {
+    fs.rmSync(credPath);
+  }
 }

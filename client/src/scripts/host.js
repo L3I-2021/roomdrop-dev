@@ -1,8 +1,15 @@
 const { ipcRenderer, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
+const { execSync, exec } = require("child_process");
 
-// Get meeting credentials
+// ==============================================================
+//
+// Credentials
+//
+// ==============================================================
+
+// Get meeting credentials from file system
 const credPath = "/tmp/host.credentials.json";
 const credentials = JSON.parse(
   fs.readFileSync(credPath, {
@@ -14,6 +21,18 @@ const { meeting } = credentials;
 
 console.log(credentials);
 
+// ==============================================================
+// DOM manipulation
+// ==============================================================
+
+// Loading screen that is showed at the begining
+const loadingScreen = document.querySelector("#loading_screen");
+
+// Status icons
+const initFuseStatus = document.querySelector("#init_fuse");
+const connectRoomStatus = document.querySelector("#connect_room");
+const mkdirPublicStatus = document.querySelector("#mkdir_public");
+
 // Information elements
 const title = document.querySelector("#title");
 const host_fullname = document.querySelector("#host_fullname");
@@ -21,23 +40,181 @@ const uid = document.querySelector("#uid");
 const password = document.querySelector("#password");
 const mountpoint = document.querySelector("#mountpoint");
 
-// Update informations
-title.innerHTML = meeting.title;
-host_fullname.innerHTML = meeting.host_fullname;
-uid.innerHTML = meeting.uid;
-password.innerHTML = meeting.password;
-mountpoint.innerHTML = meeting.mountpoint;
+// Guest list related stuff
+const guestCount = document.querySelector("#guestCount");
+const guestList = document.querySelector("#guestList");
 
 // Message related elements
 const messageFeed = document.querySelector("#messageFeed");
 const messageInput = document.querySelector("#messageInput");
 
+// Update informations
+title.innerHTML = meeting.title;
+host_fullname.innerHTML = meeting.host_fullname;
+uid.innerHTML = meeting.uid;
+password.innerHTML = meeting.password;
+mountpoint.innerHTML = meeting.mountpoint.replace(process.env.HOME, "~");
+
+// Init guest list count
+guestCount.innerHTML = 0;
+
+// Action buttons
+const tryAgainBtn = document.querySelector("#try_again");
+const openBtn = document.querySelector("#open");
+const endBtn = document.querySelector("#end");
+const copyBtn = document.querySelector("#copy");
+const sendBtn = document.querySelector("#send");
+
+// Reload the window wwhen the user clicks on "Try again"
+tryAgainBtn.onclick = function () {
+  document.location.reload();
+};
+
+// Open the meeting in the file explorer
+openBtn.onclick = openInExplorer;
+
+// End the meeting and close the window as well
+endBtn.onclick = function () {
+  // Close the window so that it shows a confirmation message dialog
+  window.close();
+};
+
+// Copy meeting UID and password to the clipboard
+copyBtn.onclick = function () {
+  const text = `UID: ${meeting.uid}, Password: ${meeting.password}`;
+
+  window.navigator.clipboard.writeText(text).then(console.log);
+};
+
+// Send message on send button click
+sendBtn.onclick = sendMessage;
+
+// Send message on enter
+messageInput.onkeypress = function (e) {
+  const ENTER = "Enter";
+
+  if (e.key === ENTER) {
+    sendMessage();
+  }
+};
+
+// When user clicks on the close button
+ipcRenderer.on("window:close-intent", onCloseIntent);
+
+// ==============================================================
+//
+// Meeting preparation
+//
+// ==============================================================
+
+// Init fuse
+let initiatedFuse = false;
+
+initFuse();
+
+// Function that initiates FUSE and changes it status color
+function initFuse() {
+  const RDFUSE_HOME = path.join(
+    process.env.HOME,
+    ".roomdrop",
+    "fuse",
+    "roomdrop"
+  );
+
+  // Try to execute a command that starts fuse from the meeting
+  try {
+    // In case it is already mounted
+    try {
+      execSync(`fusermount -u ${meeting.fuseMountpoint}`);
+    } catch (e) {}
+
+    execSync(`python3 host.py ../host`, {
+      cwd: RDFUSE_HOME,
+    });
+
+    initFuseStatus.classList.remove("text-gray-400");
+    initFuseStatus.classList.add("text-green-600");
+
+    initiatedFuse = true;
+  } catch (e) {
+    console.log("stderr", e);
+
+    initFuseStatus.classList.add("text-red-600");
+
+    alert(
+      `We could't initiate FUSE. Make sure that your mountpoint (${meeting.fuseMountpoint}) is empty and try again.`
+    );
+
+    tryAgainBtn.classList.remove("hidden");
+  }
+}
+
+// Connect to the meeting room
+// Use the right Server URL according to the environment
 const BASE =
   process.env.ENV === "production"
     ? "http://pacific-wave-46729.herokuapp.com"
     : "http://localhost:5000";
 
 const socket = io(BASE);
+
+// Once connected, join the meeting room
+socket.on("connect", function () {
+  console.log("connected");
+
+  connectRoomStatus.classList.remove("text-gray-400");
+  connectRoomStatus.classList.add("text-green-600");
+
+  // Notify meeting attendants
+  socket.emit("join", {
+    meeting_uid: meeting.uid,
+  });
+});
+
+// Create meeting public folder
+const PUBLIC_PATH = path.join(meeting.fuseMountpoint, "public");
+let createdPublicFolder = false;
+
+if (initiatedFuse && !fs.existsSync(PUBLIC_PATH)) {
+  try {
+    fs.mkdirSync(PUBLIC_PATH);
+
+    mkdirPublicStatus.classList.remove("text-gray-400");
+    mkdirPublicStatus.classList.add("text-green-600");
+
+    createdPublicFolder = true;
+  } catch (e) {
+    mkdirPublicStatus.classList.remove("text-gray-400");
+    mkdirPublicStatus.classList.add("text-red-600");
+
+    alert(
+      `Couldn't create the 'public' directory in the meeting mountpoint (${meeting.fuseMountpoint}). Verify that the meeting was correctly mounted.`
+    );
+
+    tryAgainBtn.classList.remove("hidden");
+  }
+} else {
+  mkdirPublicStatus.classList.remove("text-gray-400");
+  mkdirPublicStatus.classList.add("text-green-600");
+
+  createdPublicFolder = true;
+}
+
+// Finally, if fuse was initiated and the public folder was created
+// Simulate loading delay and open the meeting folder in the explorer
+if (initiatedFuse && createdPublicFolder) {
+  setTimeout(function () {
+    loadingScreen.classList.add("hidden");
+
+    shell.openPath(meeting.fuseMountpoint);
+  }, 2000);
+}
+
+// ==============================================================
+//
+// Socket Events
+//
+// ==============================================================
 
 // Log every event
 socket.onAny(function (event, data) {
@@ -46,23 +223,6 @@ socket.onAny(function (event, data) {
   // Update guest list when a guest joins or leaves
   if (event === "new join" || event === "leaved") {
     updateGuestList(data.guests);
-  }
-});
-
-// Once connected, join the meeting room
-socket.on("connect", function () {
-  console.log("connected");
-
-  // Notify meeting attendants
-  socket.emit("join", {
-    meeting_uid: meeting.uid,
-  });
-
-  // Create meeting public folder
-  const PUBLIC_PATH = path.join(meeting.fuseMountpoint, "public");
-
-  if (!fs.existsSync(PUBLIC_PATH)) {
-    fs.mkdirSync(PUBLIC_PATH);
   }
 });
 
@@ -104,19 +264,53 @@ socket.on("new file", function (data) {
   }
 });
 
+// On guest file deleted
+socket.on("delete file guest", function (data) {
+  const { filename, guest_fullname } = data;
+
+  const guestFilePath = path.join(
+    meeting.fuseMountpoint,
+    guest_fullname,
+    filename
+  );
+
+  // Delete file from sytem
+  if (fs.existsSync(guestFilePath)) {
+    fs.rmSync(guestFilePath);
+  }
+});
+
 // On new message
 socket.on("new message", function (message) {
   addMessage(message);
 });
 
-// Send message on enter
-messageInput.onkeypress = function (e) {
-  const ENTER = "Enter";
+// ==============================================================
+//
+// Rendering functions
+//
+// ==============================================================
 
-  if (e.key === ENTER) {
-    sendMessage();
+function updateGuestList(guests) {
+  // Clear list
+  guestList.textContent = "";
+
+  // Update guest count
+  guestCount.innerHTML = guests.length;
+
+  // If empty list
+  if (guests.length == 0) return;
+
+  // Add each guest to the list
+  for (let i = 0; i < guests.length; i++) {
+    let li = document.createElement("li");
+    li.classList.add("py-2", "border-b", "mx-2");
+
+    li.appendChild(document.createTextNode(guests[i]));
+
+    guestList.appendChild(li);
   }
-};
+}
 
 // Add a message to the message feed
 function addMessage(message) {
@@ -156,80 +350,18 @@ function addMessage(message) {
   messageFeed.appendChild(messageEl);
 }
 
-// On guest file deleted
-socket.on("delete file guest", function (data) {
-  const { filename, guest_fullname } = data;
+// ==============================================================
+//
+// Utils
+//
+// ==============================================================
 
-  const guestFilePath = path.join(
-    meeting.fuseMountpoint,
-    guest_fullname,
-    filename
-  );
-
-  // Delete file from sytem
-  if (fs.existsSync(guestFilePath)) {
-    fs.rmSync(guestFilePath);
-  }
-});
-
-// On meeting end
-socket.on("end", function (data) {});
-
-// Guest list related stuff
-const guestCount = document.querySelector("#guestCount");
-const guestList = document.querySelector("#guestList");
-
-// Init guest list
-guestCount.innerHTML = 0;
-
-function updateGuestList(guests) {
-  // Clear list
-  guestList.textContent = "";
-
-  // Update guest count
-  guestCount.innerHTML = guests.length;
-
-  // If empty list
-  if (guests.length == 0) return;
-
-  // Add each guest to the list
-  for (let i = 0; i < guests.length; i++) {
-    let li = document.createElement("li");
-    li.classList.add("py-2", "border-b", "mx-2");
-
-    li.appendChild(document.createTextNode(guests[i]));
-
-    guestList.appendChild(li);
-  }
+// Open file explorer on the meeting mountpoint
+function openInExplorer() {
+  shell.openPath(meeting.fuseMountpoint);
 }
 
-// Action buttons
-const openBtn = document.querySelector("#open");
-const endBtn = document.querySelector("#end");
-const copyBtn = document.querySelector("#copy");
-const sendBtn = document.querySelector("#send");
-
-openBtn.onclick = function () {
-  // Open file explorer on the meeting mountpoint
-  shell.openPath(meeting.mountpoint);
-};
-
-endBtn.onclick = function () {
-  // Close the window so that it shows a confirmation message dialog
-  window.close();
-};
-
-copyBtn.onclick = function () {
-  const text = `UID: ${meeting.uid}, Password: ${meeting.password}`;
-
-  window.navigator.clipboard.writeText(text).then(console.log);
-};
-
-sendBtn.onclick = sendMessage;
-
-// When user clicks on the close button
-ipcRenderer.on("window:close-intent", onCloseIntent);
-
+// Function that ends the meeting and closes the window
 function onCloseIntent(event, args) {
   // Make a request to end the meeting
   endMeeting()
@@ -245,8 +377,8 @@ function onCloseIntent(event, args) {
         // Notify room
         socket.emit("end", { meeting_uid: meeting.uid });
 
-        // Delete fuse directory (TEMPORARY)
-        // fs.rmSync(meeting.fuseMountpoint, { recursive: true, force: true });
+        // Unmount FUSE
+        execSync(`fusermount -u ${meeting.fuseMountpoint}`);
 
         // Notify main process to close the window
         ipcRenderer.send("window:close");
@@ -254,6 +386,7 @@ function onCloseIntent(event, args) {
     });
 }
 
+// Function that sends a request to end the meeting
 function endMeeting() {
   // Request URL
   const API_URL = new URL(`${BASE}/meetings/${meeting.uid}/end`);
@@ -269,6 +402,7 @@ function endMeeting() {
   });
 }
 
+// Function thate
 function sendMessage() {
   const text = messageInput.value.trim();
 
@@ -284,6 +418,7 @@ function sendMessage() {
   messageInput.value = "";
 }
 
+// Function that deletes the credentials files
 function removeCredentials() {
   fs.rmSync(credPath);
 }

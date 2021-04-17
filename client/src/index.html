@@ -1,8 +1,140 @@
-<body>
-    <a href="new.html">
-        <button>New meeting</button>
-    </a>
-    <a href="join.html">
-        <button>Join meeting</button>
-    </a>
-</body>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roomdrop Chat</title>
+    <!-- TAILWINDCSS CDN (TEMPORARLY) -->
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <header class="container max-w-2xl mx-auto p-4 text-center gap-4">
+      <svg
+        class="mx-auto mb-2 w-16 h-16"
+        viewBox="0 0 512 512"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect width="512" height="512" rx="80" fill="url(#paint0_linear)" />
+        <path
+          d="M191.612 175.515V304.291C191.612 312.829 195.004 321.018 201.042 327.055C207.079 333.093 215.268 336.485 223.806 336.485H320.388M191.612 175.515V143.321C191.612 134.783 195.004 126.594 201.042 120.557C207.079 114.519 215.268 111.127 223.806 111.127H297.627C301.896 111.128 305.989 112.825 309.008 115.844L380.06 186.896C383.079 189.914 384.775 194.007 384.776 198.276V304.291C384.776 312.829 381.384 321.018 375.347 327.055C369.309 333.093 361.12 336.485 352.582 336.485H320.388M191.612 175.515H159.418C150.88 175.515 142.691 178.907 136.654 184.945C130.616 190.982 127.224 199.171 127.224 207.709V368.679C127.224 377.217 130.616 385.406 136.654 391.443C142.691 397.481 150.88 400.873 159.418 400.873H288.194C296.732 400.873 304.921 397.481 310.959 391.443C316.996 385.406 320.388 377.217 320.388 368.679V336.485"
+          stroke="white"
+          stroke-width="20"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M299.52 226.304C302.327 226.304 305.068 225.45 307.377 223.854C309.687 222.259 311.456 219.999 312.45 217.373C313.443 214.748 313.614 211.883 312.94 209.158C312.265 206.433 310.777 203.978 308.673 202.12C306.57 200.261 303.95 199.087 301.163 198.754C298.376 198.42 295.553 198.943 293.071 200.253C290.588 201.563 288.563 203.597 287.264 206.086C285.966 208.574 285.456 211.399 285.802 214.185L263.039 225.567C261.086 223.684 258.622 222.417 255.955 221.924C253.287 221.431 250.534 221.734 248.037 222.795C245.54 223.855 243.411 225.627 241.914 227.89C240.417 230.152 239.619 232.805 239.619 235.518C239.619 238.23 240.417 240.883 241.914 243.146C243.411 245.408 245.54 247.18 248.037 248.241C250.534 249.302 253.287 249.604 255.955 249.112C258.622 248.619 261.086 247.352 263.039 245.469L285.802 256.85C285.399 260.086 286.153 263.361 287.93 266.095C289.707 268.829 292.394 270.846 295.515 271.791C298.636 272.736 301.991 272.547 304.986 271.257C307.981 269.968 310.424 267.661 311.883 264.745C313.342 261.828 313.723 258.49 312.959 255.32C312.195 252.15 310.335 249.352 307.707 247.421C305.08 245.49 301.854 244.549 298.6 244.766C295.346 244.983 292.274 246.344 289.926 248.607L267.163 237.225C267.302 236.093 267.302 234.947 267.163 233.815L289.926 222.433C292.405 224.829 295.788 226.304 299.52 226.304Z"
+          fill="white"
+        />
+        <defs>
+          <linearGradient
+            id="paint0_linear"
+            x1="512"
+            y1="-6.01196e-05"
+            x2="7.68"
+            y2="501.76"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stop-color="#9B51E0" />
+            <stop offset="1" stop-color="#51E0BE" />
+          </linearGradient>
+        </defs>
+      </svg>
+
+      <div>
+        <h1 class="text-4xl font-bold">Welcome to Roomdrop</h1>
+        <p class="text-purple-600">Secure meetings as file system</p>
+      </div>
+    </header>
+
+    <main class="container max-w-2xl mx-auto p-4">
+      <div class="flex items-center gap-8 mb-8">
+        <div>
+          <svg class="w-12 h-12 text-yellow-300" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              d="M20,6A2,2 0 0,1 22,8V18A2,2 0 0,1 20,20H4C2.89,20 2,19.1 2,18V6C2,4.89 2.89,4 4,4H10L12,6H20M19,17V13H18V12A3,3 0 0,0 15,9A3,3 0 0,0 12,12V13H11V17H19M15,11A1,1 0 0,1 16,12V13H14V12A1,1 0 0,1 15,11Z"
+            />
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg mb-2">
+            Share files securely with E2E Encryption
+          </h1>
+          <p class="max-w-md text-sm text-gray-500">
+            Lorem ipsum dolor, sit amet consectetur adipisicing elit. Laborum
+            molestiae voluptas similique dicta officiis consequatur!
+          </p>
+        </div>
+      </div>
+
+      <div class="flex flex-row-reverse items-center mb-8 gap-8">
+        <div>
+          <svg class="w-12 h-12 text-gray-600" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              d="M15.46,15.88L16.88,14.46L19,16.59L21.12,14.47L22.53,15.88L20.41,18L22.54,20.12L21.12,21.54L19,19.41L16.88,21.53L15.47,20.12L17.59,18L15.46,15.88M12,3C16.42,3 20,4.79 20,7C20,9.21 16.42,11 12,11C7.58,11 4,9.21 4,7C4,4.79 7.58,3 12,3M4,9C4,11.21 7.58,13 12,13C16.42,13 20,11.21 20,9V12.08L19,12C16.41,12 14.2,13.64 13.36,15.94L12,16C7.58,16 4,14.21 4,12V9M4,14C4,16.21 7.58,18 12,18H13C13,19.05 13.27,20.04 13.75,20.9L12,21C7.58,21 4,19.21 4,17V14Z"
+            />
+          </svg>
+        </div>
+        <div class="text-right">
+          <h1 class="font-bold text-lg mb-2">No persistent data collected</h1>
+          <p class="max-w-md text-sm text-gray-500">
+            Lorem ipsum dolor sit amet consectetur adipisicing elit. Assumenda,
+            similique animi! Modi facilis labore possimus?
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-8 mb-4">
+        <div>
+          <svg
+            class="h-12 w-12 text-green-500"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
+            <path
+              d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z"
+            />
+            <path
+              d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z"
+            />
+          </svg>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg mb-2">Chat with your meeting guests</h1>
+          <p class="max-w-md text-sm text-gray-500">
+            Lorem ipsum dolor, sit amet consectetur adipisicing elit.
+            Perspiciatis eos distinctio iste? Unde, quas distinctio?
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <div class="flex gap-4 items-center justify-center">
+        <a href="join.html">
+          <button
+            class="py-3 px-8 bg-green-400 rounded-lg text-white font-semibold"
+          >
+            Join meeting
+          </button>
+        </a>
+
+        <a href="new.html">
+          <button
+            class="py-3 px-8 bg-purple-600 text-white font-semibold rounded-lg"
+          >
+            New meeting
+          </button>
+        </a>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,6 +1,13 @@
 const { ipcRenderer, shell } = require("electron");
 const fs = require("fs");
 const path = require("path");
+const { execSync } = require("child_process");
+
+// ==============================================================
+//
+// Credentials
+//
+// ==============================================================
 
 // Get meeting credentials
 const credPath = "/tmp/guest.credentials.json";
@@ -14,6 +21,18 @@ const { meeting, guest } = credentials;
 
 console.log(credentials);
 
+// ==============================================================
+// DOM manipulation
+// ==============================================================
+
+// Loading screen that is showed at the begining
+const loadingScreen = document.querySelector("#loading_screen");
+
+// Status icons
+const initFuseStatus = document.querySelector("#init_fuse");
+const connectRoomStatus = document.querySelector("#connect_room");
+const mkdirPublicStatus = document.querySelector("#mkdir_public");
+
 // Information elements
 const title = document.querySelector("#title");
 const host_fullname = document.querySelector("#host_fullname");
@@ -22,24 +41,179 @@ const password = document.querySelector("#password");
 const guest_fullname = document.querySelector("#guest_fullname");
 const mountpoint = document.querySelector("#mountpoint");
 
+// Message related elements
+const messageFeed = document.querySelector("#messageFeed");
+const messageInput = document.querySelector("#messageInput");
+
+// Guest list
+const guestCount = document.querySelector("#guestCount");
+const guestList = document.querySelector("#guestList");
+
+// Init guest list count
+guestCount.innerHTML = 0;
+
 // Update informations
 title.innerHTML = meeting.title;
 host_fullname.innerHTML = meeting.host_fullname;
 uid.innerHTML = meeting.uid;
 password.innerHTML = meeting.password;
 guest_fullname.innerHTML = guest.fullname;
-mountpoint.innerHTML = meeting.mountpoint;
+mountpoint.innerHTML = meeting.mountpoint.replace(process.env.HOME, "~");
 
-// Message related elements
-const messageFeed = document.querySelector("#messageFeed");
-const messageInput = document.querySelector("#messageInput");
+// Action buttons
+const tryAgainBtn = document.querySelector("#try_again");
+const openBtn = document.querySelector("#open");
+const leaveBtn = document.querySelector("#leave");
+const copyBtn = document.querySelector("#copy");
+const sendBtn = document.querySelector("#send");
 
+// Reload the window wwhen the user clicks on "Try again"
+tryAgainBtn.onclick = function () {
+  document.location.reload();
+};
+
+openBtn.onclick = openInExplorer;
+
+// Leave the meeting and close the window as well
+leaveBtn.onclick = function () {
+  // Close the window so that it shows a confirmation message dialog
+  window.close();
+};
+
+// Copy meeting UID and password to the clipboard
+copyBtn.onclick = function () {
+  const text = `UID: ${meeting.uid}, Password: ${meeting.password}`;
+
+  window.navigator.clipboard.writeText(text).then(console.log);
+};
+
+sendBtn.onclick = sendMessage;
+
+// Send message on enter
+messageInput.onkeypress = function (e) {
+  const ENTER = "Enter";
+
+  if (e.key === ENTER) {
+    sendMessage();
+  }
+};
+
+// When user clicks on the close button
+ipcRenderer.on("window:close-intent", onCloseIntent);
+
+// ==============================================================
+//
+// Meeting preparation
+//
+// ==============================================================
+
+// Init fuse
+let initiatedFuse = false;
+
+initFuse();
+
+// Function that initiates FUSE and changes it status color
+function initFuse() {
+  const RDFUSE_HOME = path.join(
+    process.env.HOME,
+    ".roomdrop",
+    "fuse",
+    "roomdrop"
+  );
+
+  // Try to execute a command that starts fuse from the meeting
+  try {
+    execSync(`python3 guest.py ../guest`, {
+      cwd: RDFUSE_HOME,
+    });
+
+    initFuseStatus.classList.remove("text-gray-400");
+    initFuseStatus.classList.add("text-green-600");
+
+    initiatedFuse = true;
+  } catch (e) {
+    console.log("stderr", e);
+
+    initFuseStatus.classList.add("text-red-600");
+
+    alert(
+      `We could't initiate FUSE. Make sure that your mountpoint (${meeting.fuseMountpoint}) is empty and try again.`
+    );
+
+    tryAgainBtn.classList.remove("hidden");
+  }
+}
+
+// Connect to the meeting room
+// Use the right Server URL according to the environment
 const BASE =
   process.env.ENV === "production"
     ? "http://pacific-wave-46729.herokuapp.com"
     : "http://localhost:5000";
 
 const socket = io(BASE);
+
+// Once connected, join the meeting room
+socket.on("connect", () => {
+  console.log("connected");
+
+  connectRoomStatus.classList.remove("text-gray-400");
+  connectRoomStatus.classList.add("text-green-600");
+
+  // Notify meeting attendants
+  socket.emit("join", {
+    guest_fullname: guest.fullname,
+    meeting_uid: meeting.uid,
+  });
+});
+
+// Create meeting public folder and guest's personnal folder
+const PUBLIC_PATH = path.join(meeting.fuseMountpoint, "public");
+const GUEST_PATH = path.join(meeting.fuseMountpoint, guest.fullname);
+let createdPublicFolder = false;
+
+// Create folders only if fuse was initiated
+if (initiatedFuse && !fs.existsSync(PUBLIC_PATH)) {
+  try {
+    fs.mkdirSync(PUBLIC_PATH);
+    fs.mkdirSync(GUEST_PATH); // Guest folder
+
+    mkdirPublicStatus.classList.remove("text-gray-400");
+    mkdirPublicStatus.classList.add("text-green-600");
+
+    createdPublicFolder = true;
+  } catch (e) {
+    mkdirPublicStatus.classList.remove("text-gray-400");
+    mkdirPublicStatus.classList.add("text-red-600");
+
+    alert(
+      `Couldn't create required directories in the meeting mountpoint (${meeting.fuseMountpoint}). Verify that the meeting was correctly mounted.`
+    );
+
+    tryAgainBtn.classList.remove("hidden");
+  }
+} else {
+  mkdirPublicStatus.classList.remove("text-gray-400");
+  mkdirPublicStatus.classList.add("text-green-600");
+
+  createdPublicFolder = true;
+}
+
+// Finally, if fuse was initiated and the public folder was created
+// Simulate loading delay and open the meeting folder in the explorer
+if (initiatedFuse && createdPublicFolder) {
+  setTimeout(function () {
+    loadingScreen.classList.add("hidden");
+
+    openInExplorer(meeting.fuseMountpoint);
+  }, 2000);
+}
+
+// ==============================================================
+//
+// Socket Events
+//
+// ==============================================================
 
 // Log every event
 socket.onAny(function (event, data) {
@@ -49,36 +223,6 @@ socket.onAny(function (event, data) {
   if (event === "new join" || event === "leaved") {
     updateGuestList(data.guests);
   }
-
-  // If meeting has ended, quit the application
-  if (event == "ended") {
-    socket.emit("leave", {
-      guest_fullname: guest.fullname,
-      meeting_uid: meeting.uid,
-    });
-
-    alert("The meeting has ended.");
-
-    ipcRenderer.send("window:close");
-  }
-});
-
-// Once connected, join the meeting room
-socket.on("connect", () => {
-  console.log("connected");
-
-  // Notify meeting attendants
-  socket.emit("join", {
-    guest_fullname: guest.fullname,
-    meeting_uid: meeting.uid,
-  });
-
-  // Create meeting public folder
-  const PUBLIC_PATH = path.join(meeting.fuseMountpoint, "public");
-
-  if (!fs.existsSync(PUBLIC_PATH)) {
-    fs.mkdirSync(PUBLIC_PATH);
-  }
 });
 
 // On new guest join
@@ -87,15 +231,6 @@ socket.on("new join", function (data) {
 
   // mettre a jour la liste des particiapnts
   updateGuestList(data.guests);
-
-  const { guest_fullname } = data;
-
-  // Create a new directory named after the new guest
-  const guestDirPath = path.join(meeting.fuseMountpoint, guest_fullname);
-
-  if (!fs.existsSync(guestDirPath)) {
-    fs.mkdirSync(guestDirPath);
-  }
 });
 
 // On new file add
@@ -134,14 +269,26 @@ socket.on("new message", function (message) {
   addMessage(message);
 });
 
-// Send message on enter
-messageInput.onkeypress = function (e) {
-  const ENTER = "Enter";
+// If meeting has ended, quit the application
+socket.on("ended", function () {
+  socket.emit("leave", {
+    guest_fullname: guest.fullname,
+    meeting_uid: meeting.uid,
+  });
 
-  if (e.key === ENTER) {
-    sendMessage();
-  }
-};
+  alert("The meeting has ended.");
+
+  // Unmount FUSE
+  execSync(`fusermount -u ${meeting.fuseMountpoint}`);
+
+  ipcRenderer.send("window:close");
+});
+
+// ==============================================================
+//
+// Rendering functions
+//
+// ==============================================================
 
 // Add a message to the message feed
 function addMessage(message) {
@@ -181,15 +328,6 @@ function addMessage(message) {
   messageFeed.appendChild(messageEl);
 }
 
-// On meeting end
-socket.on("end", function (data) {});
-
-// Guest list
-const guestCount = document.querySelector("#guestCount");
-const guestList = document.querySelector("#guestList");
-
-guestCount.innerHTML = 0; // Initialiser le compteur à 0
-
 function updateGuestList(guests) {
   // Clear list
   guestList.textContent = "";
@@ -211,31 +349,15 @@ function updateGuestList(guests) {
   }
 }
 
-// Buttons
-const openBtn = document.querySelector("#open");
-const leaveBtn = document.querySelector("#leave");
-const copyBtn = document.querySelector("#copy");
-const sendBtn = document.querySelector("#send");
+// ==============================================================
+//
+// Utils
+//
+// ==============================================================
 
-openBtn.onclick = function () {
-  // Open file explorer on the meeting mountpoint
-  shell.openPath(meeting.mountpoint);
-};
-
-leaveBtn.onclick = function () {
-  // Close the window so that it shows a confirmation message dialog
-  window.close();
-};
-
-copyBtn.onclick = function () {
-  const text = `UID: ${meeting.uid}, Password: ${meeting.password}`;
-
-  window.navigator.clipboard.writeText(text).then(console.log);
-};
-
-sendBtn.onclick = sendMessage;
-
-ipcRenderer.on("window:close-intent", onCloseIntent);
+function openInExplorer() {
+  shell.openPath(meeting.fuseMountpoint);
+}
 
 function onCloseIntent(event, args) {
   console.log("meeting leave request");
@@ -254,8 +376,8 @@ function onCloseIntent(event, args) {
         meeting_uid: meeting.uid,
       });
 
-      // Delete fuse directory (TEMPORARY)
-      // fs.rmSync(meeting.fuseMountpoint, { recursive: true, force: true });
+      // Unmount FUSE
+      execSync(`fusermount -u ${meeting.fuseMountpoint}`);
 
       // Notify main process to close the window
       ipcRenderer.send("window:close");

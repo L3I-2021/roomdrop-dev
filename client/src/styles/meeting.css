@@ -1,6 +1,12 @@
 :root {
   --blue: #273755;
 }
+
+#loader {
+  border-bottom-color: transparent;
+  border-right-color: transparent;
+}
+
 .header {
   background: var(--blue);
 }

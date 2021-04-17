@@ -13,7 +13,7 @@ function createWindow() {
   // create window
   let win = new BrowserWindow({
     icon: __dirname + "/assets/icon256x256.png",
-    width: 800,
+    width: 900,
     height: 600,
     webPreferences: {
       nodeIntegration: true,

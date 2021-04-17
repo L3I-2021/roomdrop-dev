@@ -9,6 +9,7 @@ const password = document.querySelector("#password");
 const form = document.querySelector("#joinMeetingForm");
 const mountpoint = document.querySelector("#mountpoint");
 const mountpointBtn = document.querySelector("#mountpointBtn");
+const goBackBtn = document.querySelector("#goBackBtn");
 
 mountpointBtn.onclick = function (e) {
   // Prevent form from submiting
@@ -30,6 +31,13 @@ mountpointBtn.onclick = function (e) {
     // Set mountpoint value to selected path
     mountpoint.value = filePaths[0];
   }
+};
+
+// Go back to the homepage
+goBackBtn.onclick = function (event) {
+  event.preventDefault();
+
+  window.location.href = "index.html";
 };
 
 // On form submit
@@ -70,12 +78,6 @@ form.onsubmit = function (e) {
         const credPath = "/tmp/guest.credentials.json";
         const { uid, title, host_fullname, host_uid, password } = res.meeting;
         const { guest } = res;
-        // FUSE mountpoint = ~ / Roomdrop / MEETING_UID . MEETING_PASSWORD
-        // const fuseMountpoint = path.join(
-        //   process.env.HOME,
-        //   "Roomdrop",
-        //   uid + "." + guest.uid
-        // );
         const fuseMountpoint = path.join(
           process.env.HOME,
           "Desktop/roomdrop-dev/fuse/guest"

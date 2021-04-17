@@ -1,73 +1,163 @@
-<body>
-  <h1>New meeting</h1>
-  <a href="index.html">&lt; Go back</a>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roomdrop Chat</title>
+    <!-- TAILWINDCSS CDN (TEMPORARLY) -->
+    <link
+      href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
 
-  <form id="newMeetingForm" name="newMeetingForm" action="host.html">
-    <div>
-      <label for="host_fullname">Fullname</label>
-      <input
-        id="host_fullname"
-        name="host_fullname"
-        type="text"
-        placeholder="ex. John Doe"
-        required
-      />
-    </div>
-    <div>
-      <label for="title">Meeting title</label>
-      <input
-        id="title"
-        name="title"
-        type="text"
-        placeholder="ex. TP3"
-        required
-      />
-    </div>
+  <body>
+    <header class="container max-w-2xl mx-auto p-4 text-center gap-4 mb-4">
+      <svg
+        class="mx-auto mb-2 w-16 h-16"
+        viewBox="0 0 512 512"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect width="512" height="512" rx="80" fill="url(#paint0_linear)" />
+        <path
+          d="M191.612 175.515V304.291C191.612 312.829 195.004 321.018 201.042 327.055C207.079 333.093 215.268 336.485 223.806 336.485H320.388M191.612 175.515V143.321C191.612 134.783 195.004 126.594 201.042 120.557C207.079 114.519 215.268 111.127 223.806 111.127H297.627C301.896 111.128 305.989 112.825 309.008 115.844L380.06 186.896C383.079 189.914 384.775 194.007 384.776 198.276V304.291C384.776 312.829 381.384 321.018 375.347 327.055C369.309 333.093 361.12 336.485 352.582 336.485H320.388M191.612 175.515H159.418C150.88 175.515 142.691 178.907 136.654 184.945C130.616 190.982 127.224 199.171 127.224 207.709V368.679C127.224 377.217 130.616 385.406 136.654 391.443C142.691 397.481 150.88 400.873 159.418 400.873H288.194C296.732 400.873 304.921 397.481 310.959 391.443C316.996 385.406 320.388 377.217 320.388 368.679V336.485"
+          stroke="white"
+          stroke-width="20"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M299.52 226.304C302.327 226.304 305.068 225.45 307.377 223.854C309.687 222.259 311.456 219.999 312.45 217.373C313.443 214.748 313.614 211.883 312.94 209.158C312.265 206.433 310.777 203.978 308.673 202.12C306.57 200.261 303.95 199.087 301.163 198.754C298.376 198.42 295.553 198.943 293.071 200.253C290.588 201.563 288.563 203.597 287.264 206.086C285.966 208.574 285.456 211.399 285.802 214.185L263.039 225.567C261.086 223.684 258.622 222.417 255.955 221.924C253.287 221.431 250.534 221.734 248.037 222.795C245.54 223.855 243.411 225.627 241.914 227.89C240.417 230.152 239.619 232.805 239.619 235.518C239.619 238.23 240.417 240.883 241.914 243.146C243.411 245.408 245.54 247.18 248.037 248.241C250.534 249.302 253.287 249.604 255.955 249.112C258.622 248.619 261.086 247.352 263.039 245.469L285.802 256.85C285.399 260.086 286.153 263.361 287.93 266.095C289.707 268.829 292.394 270.846 295.515 271.791C298.636 272.736 301.991 272.547 304.986 271.257C307.981 269.968 310.424 267.661 311.883 264.745C313.342 261.828 313.723 258.49 312.959 255.32C312.195 252.15 310.335 249.352 307.707 247.421C305.08 245.49 301.854 244.549 298.6 244.766C295.346 244.983 292.274 246.344 289.926 248.607L267.163 237.225C267.302 236.093 267.302 234.947 267.163 233.815L289.926 222.433C292.405 224.829 295.788 226.304 299.52 226.304Z"
+          fill="white"
+        />
+        <defs>
+          <linearGradient
+            id="paint0_linear"
+            x1="512"
+            y1="-6.01196e-05"
+            x2="7.68"
+            y2="501.76"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stop-color="#9B51E0" />
+            <stop offset="1" stop-color="#51E0BE" />
+          </linearGradient>
+        </defs>
+      </svg>
 
-    <div>
-      <label for="mountpoint">Meeting mountpoint</label>
-      <input
-        type="text"
-        name="mountpoint"
-        id="mountpoint"
-        placeholder="Select an empty folder"
-        required
-        disabled
-      />
+      <div>
+        <h1 class="text-4xl font-bold">New meeting</h1>
+        <p class="text-purple-600 tracking-wide">
+          Fill up your meeting informations
+        </p>
+      </div>
+    </header>
 
-      <button id="mountpointBtn">
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-            d="M21.9446 15.7579C21.9446 19.336 19.836 21.4446 16.2579 21.4446H8.47173C4.88444 21.4446 2.77588 19.336 2.77588 15.7579V7.9626C2.77588 4.38444 4.09031 2.27588 7.66847 2.27588H9.66749C10.3858 2.27588 11.0621 2.61406 11.4931 3.18868L12.4059 4.40269C12.8378 4.97618 13.5135 5.31406 14.2315 5.31549H17.0611C20.6484 5.31549 21.972 7.14108 21.972 10.7923L21.9446 15.7579Z"
-            stroke="#130F26"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+    <main class="container max-w-4xl mx-auto">
+      <form
+        id="newMeetingForm"
+        action="host.html"
+        class="grid grid-cols-2 gap-4 p-4"
+      >
+        <div>
+          <label
+            for="host_fullname"
+            class="mb-2 font-light uppercase text-purple-600 block"
+            >Fullname</label
+          >
+          <input
+            id="host_fullname"
+            class="bg-gray-50 p-2 w-full rounded-lg border"
+            type="text"
+            placeholder="Enter your display name"
+            required
+            minlength="8"
           />
-          <path
-            opacity="0.4"
-            d="M7.55884 14.4891H17.1523"
-            stroke="#130F26"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+        </div>
+
+        <div>
+          <label
+            for="title"
+            class="mb-2 font-light uppercase text-purple-600 block"
+            >Meeting title</label
+          >
+          <input
+            id="title"
+            class="bg-gray-50 p-2 w-full rounded-lg border"
+            type="text"
+            placeholder="ex. Advanced CS 01.04"
+            required
+            minlength="2"
           />
-        </svg>
-      </button>
-    </div>
+        </div>
+        <div class="col-span-2">
+          <label
+            for="mountpoint"
+            class="mb-2 font-light uppercase text-purple-600 block"
+            >Mountpoint</label
+          >
 
-    <div>
-      <button>Start meeting</button>
-    </div>
-  </form>
+          <div class="flex flex-row-reverse gap-2">
+            <input
+              id="mountpoint"
+              class="bg-gray-50 p-2 flex-1 rounded-lg border"
+              type="text"
+              disabled
+              placeholder="Saving location"
+            />
+            <button
+              id="mountpointBtn"
+              class="p-2 border border-purple-300 text-purple-600 flex gap-2 rounded-lg font-semibold"
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M21.9446 15.7579C21.9446 19.336 19.836 21.4446 16.2579 21.4446H8.47173C4.88444 21.4446 2.77588 19.336 2.77588 15.7579V7.9626C2.77588 4.38444 4.09031 2.27588 7.66847 2.27588H9.66749C10.3858 2.27588 11.0621 2.61406 11.4931 3.18868L12.4059 4.40269C12.8378 4.97618 13.5135 5.31406 14.2315 5.31549H17.0611C20.6484 5.31549 21.972 7.14108 21.972 10.7923L21.9446 15.7579Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  opacity="0.5"
+                  d="M7.55884 14.4891H17.1523"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
 
-  <script src="./scripts/new.js"></script>
-</body>
+              <span>Select a directory </span>
+            </button>
+          </div>
+        </div>
+
+        <div class="col-span-2 flex items-center justify-center gap-4">
+          <button
+            id="goBackBtn"
+            class="mt-6 py-2 px-12 text-lg font-semibold rounded-lg text-blue-900 border border-transparent hover:border-blue-200"
+          >
+            &lt; Go back
+          </button>
+          <button
+            type="submit"
+            class="mt-6 py-2 px-12 text-lg bg-purple-600 text-white font-semibold rounded-lg shadow-2xl"
+          >
+            Start a meeting
+          </button>
+        </div>
+      </form>
+    </main>
+
+    <script src="./scripts/new.js"></script>
+  </body>
+</html>

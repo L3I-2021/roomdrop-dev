@@ -8,6 +8,7 @@ const fullname = document.querySelector("#host_fullname");
 const title = document.querySelector("#title");
 const mountpoint = document.querySelector("#mountpoint");
 const mountpointBtn = document.querySelector("#mountpointBtn");
+const goBackBtn = document.querySelector("#goBackBtn");
 
 const BASE =
   process.env.ENV === "production"
@@ -34,6 +35,13 @@ mountpointBtn.onclick = function (e) {
     // Set mountpoint value to selected path
     mountpoint.value = filePaths[0];
   }
+};
+
+// Go back to the index page
+goBackBtn.onclick = function (event) {
+  event.preventDefault();
+
+  window.location.href = "index.html";
 };
 
 // On form submit

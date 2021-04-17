@@ -123,6 +123,10 @@ function initFuse() {
 
   // Try to execute a command that starts fuse from the meeting
   try {
+    try {
+      execSync(`fusermount -u ${meeting.fuseMountpoint}`);
+    } catch (e) {}
+
     execSync(`python3 guest.py ../guest`, {
       cwd: RDFUSE_HOME,
     });
@@ -227,16 +231,28 @@ socket.onAny(function (event, data) {
 
 // On new guest join
 socket.on("new join", function (data) {
+  const { guest_fullname, guests } = data;
   console.log("Nouvel participant", data);
 
   // mettre a jour la liste des particiapnts
-  updateGuestList(data.guests);
+  updateGuestList(guests);
+
+  // Add notification to the message feed
+  addNotification(`${guest_fullname} joined the meeting`);
+});
+
+// On guest leave
+socket.on("leaved", function (data) {
+  const { guest_fullname } = data;
+
+  addNotification(`${guest_fullname} leaved the meeting`);
 });
 
 // On new file add
 socket.on("new file", function (data) {
   // Create a new file in the fusemount directory
   const { filename, author_fullname } = data;
+  const display_filename = filename.replace(".encrypted", "");
 
   // If the new file is from the host
   // Create a new file in the FUSE mountpoint
@@ -249,6 +265,12 @@ socket.on("new file", function (data) {
     fs.writeFileSync(downloadPath, "", {
       encoding: "utf-8",
     });
+
+    addNotification(`${meeting.host_fullname} uploaded ${display_filename}`);
+  }
+
+  if (author_fullname == guest.fullname) {
+    addNotification(`You uploaded ${display_filename}`);
   }
 });
 
@@ -261,6 +283,8 @@ socket.on("delete file public", function (data) {
   // Delete file from sytem
   if (fs.existsSync(publicFilePath)) {
     fs.rmSync(publicFilePath);
+
+    addNotification(`${meeting.host_fullname} deleted ${filename}`);
   }
 });
 
@@ -347,6 +371,21 @@ function updateGuestList(guests) {
 
     guestList.appendChild(li);
   }
+}
+
+function addNotification(notification) {
+  const notif = document.createElement("div");
+  notif.classList.add(
+    "self-stretch",
+    "p-2",
+    "text-sm",
+    "text-center",
+    "text-gray-600"
+  );
+
+  notif.appendChild(document.createTextNode(notification));
+
+  messageFeed.appendChild(notif);
 }
 
 // ==============================================================

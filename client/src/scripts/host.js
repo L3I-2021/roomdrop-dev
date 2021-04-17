@@ -236,18 +236,31 @@ socket.on("new join", function (data) {
   if (!fs.existsSync(guestDirPath)) {
     fs.mkdirSync(guestDirPath);
   }
+
+  // Add notification to the message feed
+  addNotification(`${guest_fullname} joined the meeting`);
+});
+
+// On guest leave
+socket.on("leaved", function (data) {
+  const { guest_fullname } = data;
+
+  addNotification(`${guest_fullname} leaved the meeting`);
 });
 
 // On new filed add
 socket.on("new file", function (data) {
   // Create a new file in the fusemount directory
   const { filename, author_fullname } = data;
+  const display_filename = filename.replace(".encrypted", "");
 
   // Is the fie from the host himself ?
   const fromHost = author_fullname === meeting.host_fullname;
 
   // If so then do nothing
-  if (fromHost) return;
+  if (fromHost) {
+    addNotification(`${author_fullname} uploaded ${display_filename}`);
+  }
   // Otherwise:
   // Create a new file in the FUSE mountpoint
   // So it can detect it and then download the file
@@ -261,6 +274,9 @@ socket.on("new file", function (data) {
 
     // Create an empty file
     fs.writeFileSync(downloadPath, "", { encoding: "utf-8" });
+
+    // Add notification to the message feed
+    addNotification(`${author_fullname} uploaded ${display_filename}`);
   }
 });
 
@@ -277,6 +293,9 @@ socket.on("delete file guest", function (data) {
   // Delete file from sytem
   if (fs.existsSync(guestFilePath)) {
     fs.rmSync(guestFilePath);
+
+    // Add notification to the message feed
+    addNotification(`${author_fullname} deleted ${filename}`);
   }
 });
 
@@ -348,6 +367,21 @@ function addMessage(message) {
 
   // Append message to the feed
   messageFeed.appendChild(messageEl);
+}
+
+function addNotification(notification) {
+  const notif = document.createElement("div");
+  notif.classList.add(
+    "self-stretch",
+    "p-2",
+    "text-sm",
+    "text-center",
+    "text-gray-600"
+  );
+
+  notif.appendChild(document.createTextNode(notification));
+
+  messageFeed.appendChild(notif);
 }
 
 // ==============================================================

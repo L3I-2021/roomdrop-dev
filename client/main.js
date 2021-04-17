@@ -1,4 +1,5 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const fs = require("fs");
 
 // Set environment
 process.env.ENV = "development"; // set to "development"
@@ -11,6 +12,7 @@ if (!(process.env.ENV === "production")) {
 function createWindow() {
   // create window
   let win = new BrowserWindow({
+    icon: __dirname + "/assets/icon256x256.png",
     width: 800,
     height: 600,
     webPreferences: {
@@ -27,8 +29,6 @@ function createWindow() {
     const url = win.webContents.getURL();
     //  path/to/page -> page/to/page -> page
     const page = url.split("?")[0].split("/").reverse()[0];
-
-    console.log(page);
 
     // if the user is closing the window during a meeting
     if (page === "host.html" || page === "guest.html") {

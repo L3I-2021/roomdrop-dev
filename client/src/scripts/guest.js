@@ -237,7 +237,7 @@ socket.onAny(function (event, data) {
 
 // On new guest join
 socket.on("new join", function (data) {
-  const { guest_fullname, guests } = data;
+  const { guest_fullname, guests, public_files } = data;
   console.log("Nouvel participant", data);
 
   // mettre a jour la liste des particiapnts
@@ -245,6 +245,27 @@ socket.on("new join", function (data) {
 
   // Add notification to the message feed
   addNotification(`${guest_fullname} joined the meeting`);
+
+  // Download public files
+  for (let i = 0; i < public_files.length; i++) {
+    const file = public_files[i];
+    const downloadPath = path.join(
+      meeting.fuseMountpoint,
+      "public",
+      file.filename
+    );
+
+    // Create an empty file
+    if (!fs.existsSync(downloadPath)) {
+      fs.writeFileSync(downloadPath, "", {
+        encoding: "utf-8",
+      });
+    }
+
+    // Add notification of a file add
+    const display_filename = file.filename.replace(".encrypted", "");
+    addNotification(`${meeting.host_fullname} uploaded ${display_filename}`);
+  }
 });
 
 // On guest leave

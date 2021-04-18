@@ -128,19 +128,28 @@ def on_join(data):
     # add session to corresponding meeting room
     join_room(meeting_uid)
 
-    # If a guest joined the meeting
+    # Get corresponding meeting
+    meeting = Meeting.query.filter_by(uid=meeting_uid).first()
+
+    # If meeting has ended
+    if meeting is None:
+        return
+
+    # Guest's fullname
+    guests = [guest.fullname for guest in meeting.guests]
+
+    # Get public files
+    host_files = File.query.filter_by(meeting_uid=meeting.uid,
+                                      author_uid=meeting.host_uid).all()
+    files = [file.as_json() for file in host_files]
+
+    # notify with current guest list ans publicly shared files
+    response = {'guests': guests, 'public_files': files}
+
     if guest_fullname is not None:
-        print(f'new guest {guest_fullname}')
+        response['guest_fullname'] = guest_fullname
 
-        # get meeting guests
-        meeting = Meeting.query.filter_by(uid=meeting_uid).first()
-
-        # Guest's fullname
-        guests = [guest.fullname for guest in meeting.guests]
-
-        # notify with current guest list
-        response = {'guest_fullname': guest_fullname, 'guests': guests}
-        sio.emit('new join', response, room=meeting_uid)
+    sio.emit('new join', response, room=meeting_uid)
 
 
 @sio.on('leave')
@@ -151,6 +160,10 @@ def on_leave(data):
 
     # get meeting guests
     meeting = Meeting.query.filter_by(uid=meeting_uid).first()
+
+    # If the meeting has ended
+    if meeting is None:
+        return
 
     # Guest's fullname
     guests = [guest for guest in meeting.guests]

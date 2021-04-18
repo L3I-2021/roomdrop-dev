@@ -236,6 +236,9 @@ socket.onAny(function (event, data) {
 socket.on("new join", function (data) {
   const { guest_fullname } = data;
 
+  // If the host joined
+  if (!guest_fullname) return;
+
   // Create a new directory named after the new guest
   const guestDirPath = path.join(meeting.fuseMountpoint, guest_fullname);
 
@@ -352,6 +355,9 @@ function addMessage(message) {
     "max-w-lg"
   );
 
+  // Align message to the right if its from right
+  messageEl.classList.add("self-end");
+
   // Create the from element
   const fromEl = document.createElement("h6");
   fromEl.appendChild(document.createTextNode(message.from));
@@ -373,6 +379,9 @@ function addMessage(message) {
 
   // Append message to the feed
   messageFeed.appendChild(messageEl);
+
+  // Scroll to the end of the chat
+  messageFeed.scrollTop = messageFeed.scrollHeight;
 }
 
 function addNotification(notification) {

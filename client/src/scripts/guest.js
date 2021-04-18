@@ -341,44 +341,6 @@ socket.on("ended", function () {
 //
 // ==============================================================
 
-// Add a message to the message feed
-function addMessage(message) {
-  const messageEl = document.createElement("div");
-  // Add TailwindCSS classes to the message element
-  messageEl.classList.add(
-    "bg-white",
-    "px-3",
-    "py-2",
-    "rounded-lg",
-    "border",
-    "mb-2",
-    "shadow",
-    "max-w-lg"
-  );
-
-  // Create the from element
-  const fromEl = document.createElement("h6");
-  fromEl.appendChild(document.createTextNode(message.from));
-  fromEl.classList.add("font-bold", "text-purple-600");
-
-  // Create message paragraph
-  const textEl = document.createElement("p");
-  textEl.appendChild(document.createTextNode(message.text));
-
-  // Create message time text
-  const timeEl = document.createElement("p");
-  timeEl.appendChild(document.createTextNode(message.time));
-  timeEl.classList.add("text-right", "text-xs", "text-gray-400");
-
-  // Append created elements to the message
-  messageEl.appendChild(fromEl);
-  messageEl.appendChild(textEl);
-  messageEl.appendChild(timeEl);
-
-  // Append message to the feed
-  messageFeed.appendChild(messageEl);
-}
-
 function updateGuestList(guests) {
   // Clear list
   guestList.textContent = "";
@@ -398,6 +360,53 @@ function updateGuestList(guests) {
 
     guestList.appendChild(li);
   }
+}
+
+// Add a message to the message feed
+function addMessage(message) {
+  const messageEl = document.createElement("div");
+  // Add TailwindCSS classes to the message element
+  messageEl.classList.add(
+    "bg-white",
+    "px-3",
+    "py-2",
+    "rounded-lg",
+    "border",
+    "mb-2",
+    "shadow",
+    "max-w-lg"
+  );
+
+  // Align message to the right if its from right
+  messageEl.classList.add("self-end");
+
+  // Create the from element
+  const fromEl = document.createElement("h6");
+  fromEl.appendChild(document.createTextNode(message.from));
+  fromEl.classList.add("font-bold", "text-purple-600");
+
+  // Align message to the right if its from right
+  fromEl.classList.add("self-end");
+
+  // Create message paragraph
+  const textEl = document.createElement("p");
+  textEl.appendChild(document.createTextNode(message.text));
+
+  // Create message time text
+  const timeEl = document.createElement("p");
+  timeEl.appendChild(document.createTextNode(message.time));
+  timeEl.classList.add("text-right", "text-xs", "text-gray-400");
+
+  // Append created elements to the message
+  messageEl.appendChild(fromEl);
+  messageEl.appendChild(textEl);
+  messageEl.appendChild(timeEl);
+
+  // Append message to the feed
+  messageFeed.appendChild(messageEl);
+
+  // Scroll to the end of the chat
+  messageFeed.scrollTop = messageFeed.scrollHeight;
 }
 
 function addNotification(notification) {

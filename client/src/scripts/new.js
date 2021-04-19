@@ -88,12 +88,8 @@ form.onsubmit = function (e) {
           secret_key,
           password,
         } = res.meeting;
-        // FUSE mountpoint = ~ / Roomdrop / MEETING_UID . MEETING_PASSWORD
-        // const fuseMountpoint = path.join(process.env.HOME, "Roomdrop", uid);
-        const fuseMountpoint = path.join(
-          process.env.HOME,
-          "Desktop/roomdrop-dev/fuse/host"
-        );
+        // FUSE mountpoint
+        const fuseMountpoint = path.join(process.env.FUSE_HOME, "host");
 
         // Meeting credentials
         const credentials = {

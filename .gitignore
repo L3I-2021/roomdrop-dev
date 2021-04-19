@@ -1,5 +1,7 @@
 # Client
 client/node_modules
+client/dist
+client/fuse/build
 
 # Server
 server/uploads

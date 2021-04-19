@@ -120,13 +120,6 @@ initFuse();
 
 // Function that initiates FUSE and changes it status color
 function initFuse() {
-  const RDFUSE_HOME = path.join(
-    process.env.HOME,
-    ".roomdrop",
-    "fuse",
-    "roomdrop"
-  );
-
   // Try to execute a command that starts fuse from the meeting
   try {
     // In case it is already mounted
@@ -135,7 +128,7 @@ function initFuse() {
     } catch (e) {}
 
     execSync(`python3 host.py ../host`, {
-      cwd: RDFUSE_HOME,
+      cwd: path.join(process.env.FUSE_HOME, "roomdrop"),
     });
 
     initFuseStatus.classList.remove("text-gray-400");
@@ -356,7 +349,8 @@ function addMessage(message) {
   );
 
   // Align message to the right if its from right
-  messageEl.classList.add("self-end");
+  if (message.from === meeting.host_fullname)
+    messageEl.classList.add("self-end");
 
   // Create the from element
   const fromEl = document.createElement("h6");

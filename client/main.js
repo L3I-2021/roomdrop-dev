@@ -1,18 +1,18 @@
 const { app, BrowserWindow, dialog, ipcMain } = require("electron");
 const fs = require("fs");
+const path = require("path");
 
 // Set environment
-process.env.ENV = "development"; // set to "development"
+process.env.ENV = "production"; // set to "development"
 
-// Enable live reload for all the files inside your project directory
-if (!(process.env.ENV === "production")) {
-  require("electron-reload")(`${__dirname}/src`);
-}
+// Roomdrop Home
+process.env.ROOMDROP_HOME = path.join(process.env.HOME, "Roomdrop");
+process.env.FUSE_HOME = path.join(process.env.ROOMDROP_HOME, "fuse");
 
 function createWindow() {
   // create window
   let win = new BrowserWindow({
-    icon: __dirname + "/assets/icon256x256.png",
+    icon: "./assets/256x256.png",
     width: 900,
     height: 600,
     webPreferences: {

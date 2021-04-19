@@ -3,14 +3,16 @@
   "productName": "Roomdrop",
   "version": "1.0.0",
   "description": "Secure file sharing meetings",
-  "icon": "assets/icon256x256.png",
+  "icon": "./assets/256x256.png",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "electron-packager": "electron-packager . roomdrop-client --overwrite --platform=linux --arch=x64 --icon=./assets/256x256.png --prune=true --out=dist/",
+    "electron-installer": "electron-installer-debian --src dist/roomdrop-client-linux-x64/ --dest dist/installers/ --arch amd64"
   },
   "keywords": [],
-  "author": "",
+  "author": "Rudro KHAN @rudrokhanpro, Sabri MEFTAH  @sabri94, Daniel SARMIENTO @gsdaans, Akli OUANES @Neo-sis",
   "license": "ISC",
   "dependencies": {},
   "devDependencies": {

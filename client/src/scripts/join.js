@@ -78,10 +78,7 @@ form.onsubmit = function (e) {
         const credPath = "/tmp/guest.credentials.json";
         const { uid, title, host_fullname, host_uid, password } = res.meeting;
         const { guest } = res;
-        const fuseMountpoint = path.join(
-          process.env.HOME,
-          "Desktop/roomdrop-dev/fuse/guest"
-        );
+        const fuseMountpoint = path.join(process.env.FUSE_HOME, "guest");
         const credentials = {
           guest,
           meeting: {

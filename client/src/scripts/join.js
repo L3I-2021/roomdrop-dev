@@ -70,6 +70,8 @@ form.onsubmit = function (e) {
     .then(function (res) {
       // If an error occured
       if (res.error) {
+        alert("Could'nt join the meeting. Verify the meeting UID and password");
+
         throw Error(res.error);
       }
 

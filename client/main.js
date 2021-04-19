@@ -21,6 +21,9 @@ function createWindow() {
     },
   });
 
+  // Hide top menu bar in production mode
+  if (process.env.ENV === "production") win.setMenu(null);
+
   // load index page
   win.loadFile("src/index.html");
 

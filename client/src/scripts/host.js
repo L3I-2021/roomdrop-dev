@@ -412,22 +412,19 @@ function onCloseIntent(event, args) {
     .then(function (res) {
       console.log(res);
 
-      if (res.error) {
-      } else {
-        // Remove credentials file
-        removeCredentials();
+      // Remove credentials file
+      removeCredentials();
 
-        // Notify room
-        socket.emit("end", { meeting_uid: meeting.uid });
+      // Notify room
+      socket.emit("end", { meeting_uid: meeting.uid });
 
-        // Unmount FUSE
-        try {
-          execSync(`fusermount -u ${meeting.fuseMountpoint}`);
-        } catch (e) {}
+      // Unmount FUSE
+      try {
+        execSync(`fusermount -u ${meeting.fuseMountpoint}`);
+      } catch (e) {}
 
-        // Notify main process to close the window
-        ipcRenderer.send("window:close");
-      }
+      // Notify main process to close the window
+      ipcRenderer.send("window:close");
     });
 }
 
@@ -456,6 +453,7 @@ function sendMessage() {
   const message = {
     text,
     from: meeting.host_fullname,
+    meeting_uid: meeting.uid,
   };
 
   socket.emit("message", message);
